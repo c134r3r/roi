@@ -5,6 +5,14 @@
 import express from 'express';
 import cors from 'cors';
 import apiRoutes from './routes.js';
+import { InMemoryDatabase } from './database/index.js';
+
+// Datenbank initialisieren
+const db = new InMemoryDatabase();
+
+// TODO: PostgreSQL aktivieren
+// import { PostgreSQLDatabase } from './database/index.js';
+// const db = new PostgreSQLDatabase();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -15,6 +23,12 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   credentials: true,
 }));
+
+// Pass Database to Routes
+app.use((req, res, next) => {
+  (req as any).db = db;
+  next();
+});
 
 // API Routes
 app.use('/api', apiRoutes);
@@ -33,4 +47,7 @@ app.listen(PORT, () => {
   console.log(`📊 ROI Calculator Server running on http://localhost:${PORT}`);
   console.log(`Frontend: http://localhost:5173`);
   console.log(`API: http://localhost:${PORT}/api`);
+  console.log(`Database: In-Memory (Production-ready für PostgreSQL - siehe docs/)`);
 });
+
+export { db };
