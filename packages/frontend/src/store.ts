@@ -57,11 +57,19 @@ export const useAppStore = create<AppState>((set) => ({
 /**
  * API Client
  */
+declare const __API_URL__: string;
+
 export class ApiClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = '/api') {
-    this.baseUrl = baseUrl;
+  constructor(baseUrl?: string) {
+    if (baseUrl) {
+      this.baseUrl = baseUrl;
+    } else {
+      // Use __API_URL__ from vite.config.ts define, or fall back to relative /api
+      const apiBaseUrl = typeof __API_URL__ !== 'undefined' ? __API_URL__ : 'http://localhost:3001';
+      this.baseUrl = `${apiBaseUrl}/api`;
+    }
   }
 
   async createProject(data: {
@@ -79,7 +87,7 @@ export class ApiClient {
   }
 
   async loadProject(code: string, passphrase?: string) {
-    const url = new URL(`${this.baseUrl}/projects/${code}`, window.location.origin);
+    const url = new URL(`/api/projects/${code}`, this.baseUrl);
     if (passphrase) url.searchParams.set('passphrase', passphrase);
 
     const response = await fetch(url);

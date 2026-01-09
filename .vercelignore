@@ -1,0 +1,11 @@
+# Backend - wird auf Vercel nicht gebraucht
+packages/backend
+
+# Docs
+*.md
+GETTING_STARTED.md
+README.md
+
+# Git
+.git
+.gitignore

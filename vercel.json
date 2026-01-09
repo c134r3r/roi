@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm --prefix packages/shared run build && npm --prefix packages/frontend run build",
+  "installCommand": "npm install && npm --prefix packages/shared install && npm --prefix packages/backend install && npm --prefix packages/frontend install",
+  "outputDirectory": "packages/frontend/dist",
+  "env": {
+    "VITE_API_URL": "@roi_api_url"
+  },
+  "envPrefix": "VITE_"
+}
