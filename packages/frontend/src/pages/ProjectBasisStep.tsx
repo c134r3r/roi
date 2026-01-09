@@ -9,9 +9,35 @@ interface ProjectBasisStepProps {
   onBack: () => void;
 }
 
+// Tooltip Komponente
+function Tooltip({ text }: { text: string }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  return (
+    <div className="relative inline-block">
+      <button
+        type="button"
+        className="text-gray-400 hover:text-gray-600 cursor-help"
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        onClick={() => setShowTooltip(!showTooltip)}
+      >
+        <HelpCircle className="w-4 h-4" />
+      </button>
+      {showTooltip && (
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg whitespace-nowrap z-50">
+          {text}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepProps) {
   const setCurrentProject = useAppStore((s) => s.setCurrentProject);
   const setIsLoading = useAppStore((s) => s.setIsLoading);
+  const setError = useAppStore((s) => s.setError);
   const currentProject = useAppStore((s) => s.currentProject);
 
   const [formData, setFormData] = useState(
@@ -25,12 +51,15 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
     }
   );
 
+  const [localError, setLocalError] = useState('');
+
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLocalError('');
     setIsLoading(true);
 
     try {
@@ -45,14 +74,19 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
         },
       });
 
-      if (response.success) {
-        setCurrentProject(response.data);
-        setIsLoading(false);
-        onNext();
+      if (!response.success) {
+        throw new Error(response.error || 'Fehler beim Erstellen des Projekts');
       }
-    } catch (error) {
-      console.error('Error creating project:', error);
+
+      setCurrentProject(response.data);
       setIsLoading(false);
+      onNext();
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unbekannter Fehler';
+      setLocalError(errorMsg);
+      setError(errorMsg);
+      setIsLoading(false);
+      console.error('Error creating project:', error);
     }
   };
 
@@ -66,6 +100,12 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
       </div>
 
       <form onSubmit={handleSubmit} className="card p-8 space-y-6">
+        {localError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+            {localError}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Projektname */}
           <div className="md:col-span-2">
@@ -110,17 +150,24 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
           <div>
             <label className="label flex items-center gap-2">
               Betrachtungszeitraum
-              <HelpCircle className="w-4 h-4 text-gray-400" title="Zeitraum für ROI-Berechnung" />
+              <Tooltip text="Zeitraum für ROI-Berechnung und Amortisationsdauer" />
             </label>
-            <select
-              className="input"
-              value={formData.horizon}
-              onChange={(e) => handleChange('horizon', parseInt(e.target.value))}
-            >
-              <option value={3}>3 Jahre</option>
-              <option value={5}>5 Jahre</option>
-              <option value={7}>7 Jahre</option>
-            </select>
+            <div className="space-y-2">
+              <input
+                type="range"
+                min="3"
+                max="10"
+                step="1"
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                value={formData.horizon}
+                onChange={(e) => handleChange('horizon', parseInt(e.target.value))}
+              />
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>3 Jahre</span>
+                <span className="font-semibold text-brand-600">{formData.horizon} Jahre</span>
+                <span>10 Jahre</span>
+              </div>
+            </div>
           </div>
 
           {/* Währung */}
@@ -142,10 +189,7 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
           <div>
             <label className="label flex items-center gap-2">
               Diskontsatz (WACC)
-              <HelpCircle
-                className="w-4 h-4 text-gray-400"
-                title="Kapitalkosten des Unternehmens. Standard: 8% für IT-Investitionen"
-              />
+              <Tooltip text="Kapitalkosten des Unternehmens. Standard: 8% für IT-Investitionen in Deutschland" />
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -157,10 +201,10 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
                 value={formData.discountRate}
                 onChange={(e) => handleChange('discountRate', parseFloat(e.target.value))}
               />
-              <span className="text-gray-600">%</span>
+              <span className="text-gray-600 font-medium">%</span>
             </div>
             <p className="text-muted mt-1">
-              Nicht sicher? 8% ist ein guter Standard für IT-Investitionen.
+              💡 Nicht sicher? 8% ist ein guter Standard für IT-Investitionen.
             </p>
           </div>
         </div>

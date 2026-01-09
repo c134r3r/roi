@@ -1,4 +1,4 @@
-import { BarChart3, Zap, Target, LineChart } from 'lucide-react';
+import { BarChart3, Zap, Target, LineChart, Plus, FolderOpen } from 'lucide-react';
 
 interface LandingPageProps {
   onNext: () => void;
@@ -7,20 +7,20 @@ interface LandingPageProps {
 export default function LandingPage({ onNext }: LandingPageProps) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
-      <div className="max-w-2xl w-full text-center">
+      <div className="max-w-4xl w-full">
         {/* Logo/Header */}
-        <div className="mb-12">
+        <div className="text-center mb-16">
           <div className="flex items-center justify-center w-16 h-16 bg-brand-100 rounded-2xl mx-auto mb-6">
             <BarChart3 className="w-8 h-8 text-brand-600" />
           </div>
           <h1 className="heading-1 mb-4">ROI Calculator</h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Professionelle Investitionsanalyse für SaaS & IT-Projekte
           </p>
         </div>
 
         {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           {[
             {
               icon: Zap,
@@ -46,16 +46,47 @@ export default function LandingPage({ onNext }: LandingPageProps) {
           ))}
         </div>
 
-        {/* CTA */}
-        <div className="space-y-4">
-          <button
-            onClick={onNext}
-            className="btn-primary w-full py-3 text-lg"
-          >
-            Neue Analyse erstellen
-          </button>
+        {/* CTA - Two options */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Neue Analyse */}
+          <div className="card p-8 text-center hover:shadow-lg transition">
+            <div className="flex items-center justify-center w-12 h-12 bg-brand-100 rounded-xl mx-auto mb-4">
+              <Plus className="w-6 h-6 text-brand-600" />
+            </div>
+            <h3 className="heading-3 mb-2">Neue Analyse</h3>
+            <p className="text-gray-600 mb-6">
+              Starten Sie eine neue Investitionsanalyse von Grund auf
+            </p>
+            <button
+              onClick={onNext}
+              className="btn-primary w-full"
+            >
+              Neue Analyse erstellen
+            </button>
+          </div>
+
+          {/* Altes Projekt laden */}
+          <div className="card p-8 text-center hover:shadow-lg transition border-2 border-gray-300">
+            <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl mx-auto mb-4">
+              <FolderOpen className="w-6 h-6 text-gray-600" />
+            </div>
+            <h3 className="heading-3 mb-2">Projekt fortsetzen</h3>
+            <p className="text-gray-600 mb-6">
+              Laden Sie ein gespeichertes Projekt mit Ihrem Projekt-Code
+            </p>
+            <button
+              onClick={onNext}
+              className="btn-secondary w-full"
+            >
+              Mit Code laden
+            </button>
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="text-center">
           <p className="text-sm text-gray-500">
-            Kein Login erforderlich. Speichern Sie Ihre Projekte mit Projekt-Code.
+            💡 Kein Login erforderlich. Speichern Sie Ihre Projekte mit einem eindeutigen Projekt-Code.
           </p>
         </div>
       </div>
