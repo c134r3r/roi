@@ -78,12 +78,23 @@ export class ApiClient {
     settings: any;
     passphrase?: string;
   }) {
+    console.log(`[API] POST ${this.baseUrl}/projects`, data);
+
     const response = await fetch(`${this.baseUrl}/projects`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    return response.json();
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[API] Error ${response.status}:`, errorText);
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log(`[API] Response:`, result);
+    return result;
   }
 
   async loadProject(code: string, passphrase?: string) {

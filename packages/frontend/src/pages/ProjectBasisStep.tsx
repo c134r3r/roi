@@ -63,7 +63,12 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
     setIsLoading(true);
 
     try {
-      const response = await apiClient.createProject({
+      // Validiere Form-Daten lokal
+      if (!formData.projectName || formData.projectName.trim().length === 0) {
+        throw new Error('Projektname ist erforderlich');
+      }
+
+      const projectData = {
         title: formData.projectName,
         description: formData.projectDescription,
         settings: {
@@ -72,10 +77,24 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
           discountRate: formData.discountRate / 100,
           baseCurrency: formData.currency,
         },
-      });
+      };
 
-      if (!response.success) {
-        throw new Error(response.error || 'Fehler beim Erstellen des Projekts');
+      console.log('Creating project with data:', projectData);
+
+      const response = await apiClient.createProject(projectData);
+
+      console.log('API Response:', response);
+
+      if (!response || !response.success) {
+        const errorDetails = response?.error || 'Fehler beim Erstellen des Projekts';
+        const errorMsg = response?.details
+          ? `${errorDetails}: ${JSON.stringify(response.details)}`
+          : errorDetails;
+        throw new Error(errorMsg);
+      }
+
+      if (!response.data) {
+        throw new Error('Ungültige Antwort vom Server: Projektdaten fehlen');
       }
 
       setCurrentProject(response.data);
@@ -83,10 +102,10 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
       onNext();
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unbekannter Fehler';
+      console.error('Error creating project:', errorMsg, error);
       setLocalError(errorMsg);
       setError(errorMsg);
       setIsLoading(false);
-      console.error('Error creating project:', error);
     }
   };
 
