@@ -31,9 +31,57 @@ interface AppState {
   setError: (error: string | null) => void;
 }
 
+const STORAGE_KEY = 'roi-calculator-project';
+
+// Hilfsfunktion um Projects zu serialisieren
+function serializeProject(project: Project): string {
+  return JSON.stringify({
+    ...project,
+    createdAt: new Date(project.createdAt).toISOString(),
+    updatedAt: new Date(project.updatedAt).toISOString(),
+  });
+}
+
+// Hilfsfunktion um Projects zu deserialisieren
+function deserializeProject(json: string): Project {
+  const data = JSON.parse(json);
+  return {
+    ...data,
+    createdAt: new Date(data.createdAt),
+    updatedAt: new Date(data.updatedAt),
+  };
+}
+
 export const useAppStore = create<AppState>((set) => ({
-  currentProject: null,
-  setCurrentProject: (project) => set({ currentProject: project }),
+  currentProject: (() => {
+    // Versuche, Projekt aus localStorage zu laden
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const project = deserializeProject(stored);
+        console.log('[Store] Loaded project from localStorage:', project.title);
+        return project;
+      }
+    } catch (error) {
+      console.warn('[Store] Failed to load from localStorage:', error);
+    }
+    return null;
+  })(),
+
+  setCurrentProject: (project) => {
+    // Speichere in localStorage als Fallback
+    if (project) {
+      try {
+        localStorage.setItem(STORAGE_KEY, serializeProject(project));
+        console.log('[Store] Saved project to localStorage:', project.title);
+      } catch (error) {
+        console.warn('[Store] Failed to save to localStorage:', error);
+      }
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    set({ currentProject: project });
+  },
 
   selectedInvestmentId: null,
   setSelectedInvestmentId: (id) => set({ selectedInvestmentId: id }),
@@ -80,21 +128,30 @@ export class ApiClient {
   }) {
     console.log(`[API] POST ${this.baseUrl}/projects`, data);
 
-    const response = await fetch(`${this.baseUrl}/projects`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
+    // Verwende 5 Sekunden Timeout für schnelleres Fallback
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[API] Error ${response.status}:`, errorText);
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    try {
+      const response = await fetch(`${this.baseUrl}/projects`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[API] Error ${response.status}:`, errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log(`[API] Response:`, result);
+      return result;
+    } finally {
+      clearTimeout(timeout);
     }
-
-    const result = await response.json();
-    console.log(`[API] Response:`, result);
-    return result;
   }
 
   async loadProject(code: string, passphrase?: string) {
