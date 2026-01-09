@@ -1,0 +1,14 @@
+{
+  "name": "roi-calculator",
+  "version": "1.0.0",
+  "description": "Professional ROI & Amortization Calculator for SaaS/IT Investments",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm --prefix packages/backend run dev\" \"npm --prefix packages/frontend run dev\"",
+    "build": "npm --prefix packages/shared run build && npm --prefix packages/backend run build && npm --prefix packages/frontend run build",
+    "install:all": "npm install && npm --prefix packages/shared install && npm --prefix packages/backend install && npm --prefix packages/frontend install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
