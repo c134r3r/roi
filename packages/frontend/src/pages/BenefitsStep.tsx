@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAppStore } from '../store';
 import { Plus, Trash2, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { computeInvestment } from '@roi/shared';
 
 type BenefitType = 'TIME_SAVINGS' | 'ERROR_REDUCTION' | 'REVENUE' | 'COST_REDUCTION' | 'OTHER';
 type AdoptionPattern = 'LINEAR' | 'SCURVE' | 'IMMEDIATE';
@@ -94,6 +95,45 @@ export default function BenefitsStep({ onNext, onBack }: BenefitsStepProps) {
   const [benefits, setBenefits] = useState<BenefitBlock[]>([]);
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
   const [showTypeSelector, setShowTypeSelector] = useState(false);
+
+  const currentProject = useAppStore((s) => s.currentProject);
+  const setCurrentProject = useAppStore((s) => s.setCurrentProject);
+
+  const handleNext = () => {
+    if (!currentProject) return;
+
+    // Update investment with benefits and calculate scenarios/sensitivity
+    const updatedProject = { ...currentProject };
+    if (updatedProject.investments[0]) {
+      const investment = updatedProject.investments[0];
+      const horizon = currentProject.settings.horizon || 3;
+
+      // Convert BenefitBlock to proper format with cashflow calculations
+      const formattedBenefits = benefits.map((b) => {
+        const annualValue = calculateBenefitValue(b);
+        return {
+          ...b,
+          cashflowByYear: new Array(horizon).fill(annualValue),
+          // Add confidence band based on confidence level
+          confidenceBand:
+            b.confidence === 'LOW'
+              ? { low: 0.5, high: 0.7 }
+              : b.confidence === 'HIGH'
+                ? { low: 0.1, high: 0.1 }
+                : { low: 0.3, high: 0.3 },
+        };
+      });
+
+      investment.benefits = formattedBenefits;
+
+      // Trigger full calculation (generates scenarios and sensitivity analysis)
+      computeInvestment(investment, currentProject.settings.discountRate, horizon);
+
+      setCurrentProject(updatedProject);
+    }
+
+    onNext();
+  };
 
   const toggleExpanded = (id: string) => {
     setExpandedBlocks((prev) => {
@@ -386,7 +426,7 @@ export default function BenefitsStep({ onNext, onBack }: BenefitsStepProps) {
         <button onClick={onBack} className="btn-secondary">
           Zurück
         </button>
-        <button onClick={onNext} className="btn-primary ml-auto">
+        <button onClick={handleNext} className="btn-primary ml-auto">
           Weiter zu Szenarien
         </button>
       </div>

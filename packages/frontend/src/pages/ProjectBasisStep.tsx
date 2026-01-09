@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAppStore, apiClient } from '../store';
 import { HelpCircle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import { Project } from '@roi/shared';
+import { Project, Investment } from '@roi/shared';
 
 interface ProjectBasisStepProps {
   onNext: () => void;
@@ -106,7 +106,27 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
         createdAt: new Date(),
         updatedAt: new Date(),
         versions: [],
-        investments: [],
+        investments: [
+          {
+            id: uuidv4(),
+            name: projectData.title,
+            status: 'DRAFT',
+            costs: [],
+            benefits: [],
+            scenarios: [],
+            computedKPIs: {
+              roi: 0,
+              roiAbsolute: 0,
+              paybackPeriod: 0,
+              discountedPayback: 0,
+              npv: 0,
+              irr: 0,
+              profitabilityIndex: 0,
+            },
+            cashflows: [],
+            sensitivity: { drivers: [] },
+          } as Investment,
+        ],
         settings: {
           currency: projectData.settings.currency as any,
           horizon: projectData.settings.horizon as any,

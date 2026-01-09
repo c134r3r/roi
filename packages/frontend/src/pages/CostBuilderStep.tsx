@@ -27,6 +27,17 @@ interface CostBuilderStepProps {
 
 export default function CostBuilderStep({ onNext, onBack }: CostBuilderStepProps) {
   const currentProject = useAppStore((s) => s.currentProject);
+  const setCurrentProject = useAppStore((s) => s.setCurrentProject);
+
+  const handleNext = () => {
+    if (currentProject && currentProject.investments[0]) {
+      const updatedProject = { ...currentProject };
+      updatedProject.investments[0].costs = costs;
+      setCurrentProject(updatedProject);
+    }
+    onNext();
+  };
+
   const [costs, setCosts] = useState<CostBlock[]>([
     {
       id: uuidv4(),
@@ -366,7 +377,7 @@ export default function CostBuilderStep({ onNext, onBack }: CostBuilderStepProps
         <button onClick={onBack} className="btn-secondary">
           Zurück
         </button>
-        <button onClick={onNext} className="btn-primary ml-auto">
+        <button onClick={handleNext} className="btn-primary ml-auto">
           Weiter zu Nutzen
         </button>
       </div>
