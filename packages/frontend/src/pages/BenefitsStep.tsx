@@ -108,10 +108,19 @@ export default function BenefitsStep({ onNext, onBack }: BenefitsStepProps) {
       const investment = updatedProject.investments[0];
       const horizon = currentProject.settings.horizon || 3;
 
+      console.log('[BenefitsStep] Converting benefits:', {
+        count: benefits.length,
+        benefits: benefits.map(b => ({
+          id: b.id,
+          name: b.name,
+          value: calculateBenefitValue(b),
+        })),
+      });
+
       // Convert BenefitBlock to proper format with cashflow calculations
       const formattedBenefits = benefits.map((b) => {
         const annualValue = calculateBenefitValue(b);
-        return {
+        const formatted = {
           ...b,
           cashflowByYear: new Array(horizon).fill(annualValue),
           // Add confidence band based on confidence level
@@ -122,12 +131,28 @@ export default function BenefitsStep({ onNext, onBack }: BenefitsStepProps) {
                 ? { low: 0.1, high: 0.1 }
                 : { low: 0.3, high: 0.3 },
         };
+        console.log('[BenefitsStep] Formatted benefit:', {
+          name: b.name,
+          annualValue,
+          cashflowByYear: formatted.cashflowByYear,
+        });
+        return formatted;
       });
 
       investment.benefits = formattedBenefits;
 
+      console.log('[BenefitsStep] Investment before calculation:', {
+        costs: investment.costs.length,
+        benefits: investment.benefits.length,
+      });
+
       // Trigger full calculation (generates scenarios and sensitivity analysis)
       computeInvestment(investment, currentProject.settings.discountRate, horizon);
+
+      console.log('[BenefitsStep] Investment after calculation:', {
+        kpis: investment.computedKPIs,
+        scenarios: investment.scenarios.length,
+      });
 
       setCurrentProject(updatedProject);
     }

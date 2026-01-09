@@ -59,6 +59,12 @@ export function computeNPV(cashflows: number[], discountRate: number): number {
  * Berechnet IRR (Interner Zinsfuß) mittels Newton-Raphson
  */
 export function computeIRR(cashflows: number[], maxIterations = 100, tolerance = 0.0001): number {
+  // Validiere Cashflows - wenn alle negativ, gibt es keine IRR
+  const hasPositive = cashflows.some(cf => cf > 0);
+  if (!hasPositive) {
+    return 0; // Keine Einnahmen möglich, IRR = 0%
+  }
+
   let rate = 0.1; // Startwert 10%
 
   for (let i = 0; i < maxIterations; i++) {
@@ -69,14 +75,24 @@ export function computeIRR(cashflows: number[], maxIterations = 100, tolerance =
 
     const newRate = rate - npv / npvDerivative;
 
+    // Begrenze Rate auf -0.99 bis 10 um zu verhindern, dass sie explodiert
+    if (newRate < -0.99) {
+      return 0;
+    }
+    if (newRate > 10) {
+      return 0; // Unrealistisch hohe Werte = kein Konvergenz
+    }
+
     if (Math.abs(newRate - rate) < tolerance) {
-      return newRate;
+      // Validiere das Ergebnis
+      return isNaN(newRate) || !isFinite(newRate) ? 0 : newRate;
     }
 
     rate = newRate;
   }
 
-  return rate;
+  // Nach allen Iterationen - wenn nicht konvergiert, gib 0 zurück
+  return (isNaN(rate) || !isFinite(rate) || Math.abs(rate) > 10) ? 0 : rate;
 }
 
 /**
@@ -257,17 +273,39 @@ export function generateCashflows(
  * Berechnet alle KPIs für ein Investment
  */
 export function computeInvestment(investment: Investment, discountRate: number, horizon: number): void {
+  console.log('[Calculation] Starting computeInvestment:', {
+    costsCount: investment.costs.length,
+    benefitsCount: investment.benefits.length,
+    horizon,
+    discountRate,
+  });
+
   const cashflows = generateCashflows(investment, discountRate, horizon);
   const cashflowValues = cashflows.map(cf => cf.netCashflow);
 
+  console.log('[Calculation] Generated cashflows:', cashflowValues);
+  console.log('[Calculation] Benefits in investment:', investment.benefits.map(b => ({
+    id: b.id,
+    name: b.name,
+    type: b.type,
+    annualValue: b.cashflowByYear[0],
+  })));
+
   investment.cashflows = cashflows;
   investment.computedKPIs = computeKPIsFromCashflows(cashflowValues, discountRate, horizon);
+
+  console.log('[Calculation] Computed KPIs:', investment.computedKPIs);
 
   // Generiere Standard-Szenarien
   investment.scenarios = generateScenarios(investment, discountRate, horizon);
 
   // Berechne Sensitivität
   investment.sensitivity = computeSensitivity(investment, discountRate, horizon);
+
+  console.log('[Calculation] Scenarios:', investment.scenarios.map(s => ({
+    name: s.name,
+    kpis: s.computedKPIs,
+  })));
 }
 
 /**
