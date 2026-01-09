@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAppStore } from '../store';
-import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, Edit2, Check, X } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 interface CostItem {
@@ -47,6 +47,8 @@ export default function CostBuilderStep({ onNext, onBack }: CostBuilderStepProps
   ]);
 
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set(['licenses']));
+  const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
+  const [editingBlockName, setEditingBlockName] = useState<string>('');
 
   const toggleExpanded = (id: string) => {
     setExpandedBlocks((prev) => {
@@ -55,6 +57,28 @@ export default function CostBuilderStep({ onNext, onBack }: CostBuilderStepProps
       else next.add(id);
       return next;
     });
+  };
+
+  const startEditingName = (blockId: string, currentName: string) => {
+    setEditingBlockId(blockId);
+    setEditingBlockName(currentName);
+  };
+
+  const saveName = (blockId: string) => {
+    if (editingBlockName.trim()) {
+      setCosts((prev) =>
+        prev.map((block) =>
+          block.id === blockId ? { ...block, name: editingBlockName.trim() } : block
+        )
+      );
+    }
+    setEditingBlockId(null);
+    setEditingBlockName('');
+  };
+
+  const cancelEditingName = () => {
+    setEditingBlockId(null);
+    setEditingBlockName('');
   };
 
   const calculateItemCost = (item: CostItem, horizon: number) => {
@@ -152,7 +176,43 @@ export default function CostBuilderStep({ onNext, onBack }: CostBuilderStepProps
               className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition"
             >
               <div className="text-left flex-1">
-                <h3 className="font-semibold text-gray-900">{costBlock.name}</h3>
+                {editingBlockId === costBlock.id ? (
+                  <div className="flex items-center gap-2 mb-1" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="text"
+                      className="input p-2"
+                      value={editingBlockName}
+                      onChange={(e) => setEditingBlockName(e.target.value)}
+                      placeholder="Kosten-Komponente benennen"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => saveName(costBlock.id)}
+                      className="text-green-600 hover:text-green-700 p-1"
+                    >
+                      <Check className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={cancelEditingName}
+                      className="text-red-600 hover:text-red-700 p-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 mb-1 group">
+                    <h3 className="font-semibold text-gray-900">{costBlock.name}</h3>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEditingName(costBlock.id, costBlock.name);
+                      }}
+                      className="text-gray-400 hover:text-brand-600 opacity-0 group-hover:opacity-100 transition"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
                 <p className="text-sm text-gray-500">{costBlock.items.length} Position(en)</p>
               </div>
               <div className="text-right mr-4">
