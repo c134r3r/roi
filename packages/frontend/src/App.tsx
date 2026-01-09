@@ -21,7 +21,12 @@ export default function App() {
   const renderStep = () => {
     switch (step) {
       case 'landing':
-        return <LandingPage onNext={() => setStep('load')} />;
+        return (
+          <LandingPage
+            onNewProject={() => setStep('basis')}
+            onLoadProject={() => setStep('load')}
+          />
+        );
       case 'load':
         return (
           <LoadProject

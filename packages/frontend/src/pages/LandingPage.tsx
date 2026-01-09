@@ -1,10 +1,11 @@
 import { BarChart3, Zap, Target, LineChart, Plus, FolderOpen } from 'lucide-react';
 
 interface LandingPageProps {
-  onNext: () => void;
+  onNewProject: () => void;
+  onLoadProject: () => void;
 }
 
-export default function LandingPage({ onNext }: LandingPageProps) {
+export default function LandingPage({ onNewProject, onLoadProject }: LandingPageProps) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
       <div className="max-w-4xl w-full">
@@ -58,7 +59,7 @@ export default function LandingPage({ onNext }: LandingPageProps) {
               Starten Sie eine neue Investitionsanalyse von Grund auf
             </p>
             <button
-              onClick={onNext}
+              onClick={onNewProject}
               className="btn-primary w-full"
             >
               Neue Analyse erstellen
@@ -75,7 +76,7 @@ export default function LandingPage({ onNext }: LandingPageProps) {
               Laden Sie ein gespeichertes Projekt mit Ihrem Projekt-Code
             </p>
             <button
-              onClick={onNext}
+              onClick={onLoadProject}
               className="btn-secondary w-full"
             >
               Mit Code laden
