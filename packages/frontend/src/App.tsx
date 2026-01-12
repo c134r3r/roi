@@ -19,6 +19,8 @@ export default function App() {
   const isLoading = useAppStore((s) => s.isLoading);
   const setIsLoading = useAppStore((s) => s.setIsLoading);
 
+  const saveProjectToDatabase = useAppStore((s) => s.saveProjectToDatabase);
+
   // Live-Berechnung triggern wenn Daten sich ändern
   const triggerCalculation = () => {
     if (currentProject?.investments[0]) {
@@ -33,9 +35,19 @@ export default function App() {
     }
   };
 
-  // Navigation mit Live-Berechnung
+  // Navigation mit Live-Berechnung und Auto-Save
   const handleStepChange = (newStep: string) => {
     triggerCalculation();
+
+    // Auto-Save zu Datenbank wenn Projekt existiert
+    if (currentProject && currentProject.id) {
+      console.log('[App] Auto-saving project before navigation...');
+      saveProjectToDatabase(currentProject).catch((error) => {
+        console.warn('[App] Auto-save failed:', error);
+        // Nicht blockieren, weitermachen auch wenn speichern fehlschlägt
+      });
+    }
+
     setStep(newStep as Step);
   };
 
@@ -107,6 +119,7 @@ export default function App() {
         <Navigation
           step={step}
           projectTitle={currentProject?.title}
+          projectCode={currentProject?.code}
           onStepClick={handleStepChange}
         />
       )}

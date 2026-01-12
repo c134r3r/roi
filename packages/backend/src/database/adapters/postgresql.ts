@@ -248,7 +248,7 @@ export class PostgreSQLDatabase implements IDatabase {
   /**
    * Cleanup: Löscht alte Projekte
    */
-  async cleanupExpiredProjects(days: number = 60): Promise<number> {
+  async cleanupExpiredProjects(days: number = 30): Promise<number> {
     const client = await this.pool.connect();
     try {
       const result = await client.query(

@@ -1,12 +1,14 @@
 import { BarChart3 } from 'lucide-react';
+import ProjectCode from './ProjectCode';
 
 interface NavigationProps {
   step: string;
   projectTitle?: string;
+  projectCode?: string;
   onStepClick?: (step: string) => void;
 }
 
-export default function Navigation({ step, projectTitle, onStepClick }: NavigationProps) {
+export default function Navigation({ step, projectTitle, projectCode, onStepClick }: NavigationProps) {
   const stepLabels: Record<string, string> = {
     basis: 'Projektbasis',
     costs: 'Kosten',
@@ -26,6 +28,7 @@ export default function Navigation({ step, projectTitle, onStepClick }: Navigati
             <BarChart3 className="w-5 h-5 text-brand-600" />
             <h1 className="text-lg font-semibold text-gray-900">{projectTitle}</h1>
           </div>
+          {projectCode && <ProjectCode code={projectCode} />}
         </div>
 
         {/* Clickable Navigation Tabs */}

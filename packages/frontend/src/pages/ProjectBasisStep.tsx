@@ -36,6 +36,7 @@ function Tooltip({ text }: { text: string }) {
 
 export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepProps) {
   const setCurrentProject = useAppStore((s) => s.setCurrentProject);
+  const saveProjectToDatabase = useAppStore((s) => s.saveProjectToDatabase);
   const setIsLoading = useAppStore((s) => s.setIsLoading);
   const setError = useAppStore((s) => s.setError);
   const currentProject = useAppStore((s) => s.currentProject);
@@ -68,48 +69,19 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
         throw new Error('Projektname ist erforderlich');
       }
 
-      const projectData = {
+      // Erstelle Projekt lokal
+      const newProject: Project = {
+        id: uuidv4(),
+        code: '', // Wird später generiert beim Speichern in der Datenbank
         title: formData.projectName,
         description: formData.projectDescription,
-        settings: {
-          currency: formData.currency,
-          horizon: parseInt(formData.horizon),
-          discountRate: formData.discountRate / 100,
-          baseCurrency: formData.currency,
-        },
-      };
-
-      console.log('Creating project with data:', projectData);
-
-      try {
-        const response = await apiClient.createProject(projectData);
-
-        console.log('API Response:', response);
-
-        if (response && response.success && response.data) {
-          setCurrentProject(response.data);
-          setIsLoading(false);
-          onNext();
-          return;
-        }
-      } catch (apiError) {
-        console.warn('Backend nicht erreichbar, verwende lokale Speicherung:', apiError);
-        // Fallback: Erstelle Projekt lokal, wenn Backend nicht funktioniert
-      }
-
-      // Fallback: Erstelle Projekt lokal für MVP
-      const localProject: Project = {
-        id: uuidv4(),
-        code: '', // Wird später generiert beim Speichern
-        title: projectData.title,
-        description: projectData.description,
         createdAt: new Date(),
         updatedAt: new Date(),
         versions: [],
         investments: [
           {
             id: uuidv4(),
-            name: projectData.title,
+            name: formData.projectName,
             status: 'DRAFT',
             costs: [],
             benefits: [],
@@ -128,15 +100,30 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
           } as Investment,
         ],
         settings: {
-          currency: projectData.settings.currency as any,
-          horizon: projectData.settings.horizon as any,
-          discountRate: projectData.settings.discountRate,
-          baseCurrency: projectData.settings.baseCurrency,
+          currency: formData.currency as any,
+          horizon: parseInt(formData.horizon),
+          discountRate: formData.discountRate / 100,
+          baseCurrency: formData.currency,
         },
       };
 
-      console.log('Using local fallback project:', localProject);
-      setCurrentProject(localProject);
+      console.log('Created local project:', newProject.title);
+
+      // Speichere in Zustand
+      setCurrentProject(newProject);
+
+      // Versuche, das Projekt in der Datenbank zu speichern
+      try {
+        const savedProject = await saveProjectToDatabase(newProject);
+        console.log('Project saved to database with code:', savedProject.code);
+        setCurrentProject(savedProject);
+      } catch (dbError) {
+        console.warn('Database save failed, continuing with local project:', dbError);
+        // Fallback: Aktualisiere Project mit zufälligem Code für lokale Nutzung
+        newProject.code = 'LOCAL-' + uuidv4().slice(0, 8).toUpperCase();
+        setCurrentProject(newProject);
+      }
+
       setIsLoading(false);
       onNext();
     } catch (error) {

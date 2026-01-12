@@ -21,18 +21,19 @@ export default function LoadProject({ onProjectLoaded, onCreateNew }: LoadProjec
     setIsLoading(true);
 
     try {
-      const response = await apiClient.loadProject(code, showPassphrase ? passphrase : undefined);
+      const project = await apiClient.loadProject(code, showPassphrase ? passphrase : undefined);
 
-      if (!response.success) {
+      if (!project) {
         setError('Projekt nicht gefunden. Bitte überprüfen Sie den Code und die Passphrase.');
         setIsLoading(false);
         return;
       }
 
-      setCurrentProject(response.data);
-      onProjectLoaded(response.data);
+      setCurrentProject(project);
+      onProjectLoaded(project);
     } catch (err) {
-      setError('Fehler beim Laden des Projekts. Bitte versuchen Sie es später erneut.');
+      const errorMessage = err instanceof Error ? err.message : 'Fehler beim Laden des Projekts';
+      setError(`${errorMessage}. Bitte versuchen Sie es später erneut.`);
       setIsLoading(false);
     }
   };
