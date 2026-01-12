@@ -128,26 +128,55 @@ export class ApiClient {
     if (baseUrl) {
       this.baseUrl = baseUrl;
     } else {
-      // Use __API_URL__ from vite.config.ts define, or fall back to relative /api
-      const apiBaseUrl = typeof __API_URL__ !== 'undefined' ? __API_URL__ : 'http://localhost:3001';
+      // Automatically detect API URL based on environment
+      const apiBaseUrl = this.detectApiUrl();
       this.baseUrl = `${apiBaseUrl}/api`;
+      console.log('[ApiClient] Using API URL:', this.baseUrl);
     }
+  }
+
+  private detectApiUrl(): string {
+    // 1. Try environment variable from build-time (Vite)
+    if (typeof __API_URL__ !== 'undefined' && __API_URL__) {
+      console.log('[ApiClient] Using __API_URL__ from Vite:', __API_URL__);
+      return __API_URL__;
+    }
+
+    // 2. Try runtime environment variable
+    if (typeof window !== 'undefined' && (window as any).env?.VITE_API_URL) {
+      console.log('[ApiClient] Using runtime VITE_API_URL');
+      return (window as any).env.VITE_API_URL;
+    }
+
+    // 3. Use relative path for same-origin (when frontend and backend are on same domain)
+    const currentHost = typeof window !== 'undefined' ? window.location.origin : '';
+    if (currentHost && !currentHost.includes('localhost')) {
+      // In production, use relative path
+      console.log('[ApiClient] Using relative /api path (production)');
+      return '';
+    }
+
+    // 4. Fallback for local development (if backend is running locally)
+    console.log('[ApiClient] Falling back to http://localhost:3001 (local dev only)');
+    return 'http://localhost:3001';
   }
 
   async createProject(project: Project) {
     const url = `${this.baseUrl}/projects`;
     console.log(`[API] POST ${url}`, project.title);
-    console.log(`[API] Base URL: ${this.baseUrl}`);
 
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(project.passphrase && { 'X-Passphrase': project.passphrase }),
+        },
         body: JSON.stringify({
           title: project.title,
           description: project.description,
           settings: project.settings,
-          passphrase: project.passphrase,
+          // Don't send passphrase in body, use header instead
         }),
       });
 
@@ -161,7 +190,7 @@ export class ApiClient {
       console.log(`[API] Project created:`, result.code);
       return result;
     } catch (error) {
-      console.error('[API] Failed to create project at:', url, error);
+      console.error('[API] Failed to create project:', error);
       throw error;
     }
   }

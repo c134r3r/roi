@@ -36,6 +36,9 @@ router.post('/projects', async (req: any, res: Response) => {
   try {
     const validated = CreateProjectSchema.parse(req.body);
 
+    // Get passphrase from header (more secure than body)
+    const passphraseFromHeader = req.headers['x-passphrase'] as string | undefined;
+
     const project: Project = {
       id: uuidv4(),
       code: '', // Wird beim Save generiert
@@ -53,9 +56,13 @@ router.post('/projects', async (req: any, res: Response) => {
       },
     };
 
-    if (validated.passphrase) {
-      project.passphrase = validated.passphrase;
+    // Use passphrase from header first, then from validated body (for backwards compatibility)
+    const passphrase = passphraseFromHeader || validated.passphrase;
+    if (passphrase) {
+      project.passphrase = passphrase;
     }
+
+    console.log('[POST /projects] Creating project:', project.title, 'with passphrase:', !!passphrase);
 
     const saved = await req.db.saveProject(project);
 
@@ -66,6 +73,7 @@ router.post('/projects', async (req: any, res: Response) => {
 
     res.status(201).json(response);
   } catch (error) {
+    console.error('[POST /projects] Error:', error);
     handleValidationError(res, error);
   }
 });
