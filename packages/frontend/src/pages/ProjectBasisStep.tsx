@@ -112,20 +112,22 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
       // Speichere in Zustand
       setCurrentProject(newProject);
 
-      // Versuche, das Projekt in der Datenbank zu speichern
+      // Speichere das Projekt in der Datenbank (muss erfolgreich sein!)
       try {
+        console.log('[ProjectBasisStep] Saving project to database...');
         const savedProject = await saveProjectToDatabase(newProject);
-        console.log('Project saved to database with code:', savedProject.code);
+        console.log('[ProjectBasisStep] Project saved to database with code:', savedProject.code);
         setCurrentProject(savedProject);
+        setIsLoading(false);
+        onNext();
       } catch (dbError) {
-        console.warn('Database save failed, continuing with local project:', dbError);
-        // Fallback: Aktualisiere Project mit zufälligem Code für lokale Nutzung
-        newProject.code = 'LOCAL-' + uuidv4().slice(0, 8).toUpperCase();
-        setCurrentProject(newProject);
+        console.error('[ProjectBasisStep] Database save failed:', dbError);
+        setLocalError('Fehler beim Speichern in der Datenbank. Bitte überprüfen Sie Ihre Verbindung.');
+        setError('Database save failed');
+        setIsLoading(false);
+        // Nicht weiterleiten wenn speichern fehlschlägt!
+        return;
       }
-
-      setIsLoading(false);
-      onNext();
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unbekannter Fehler';
       console.error('Error creating project:', errorMsg, error);

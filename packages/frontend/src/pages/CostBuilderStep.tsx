@@ -28,6 +28,7 @@ interface CostBuilderStepProps {
 export default function CostBuilderStep({ onNext, onBack }: CostBuilderStepProps) {
   const currentProject = useAppStore((s) => s.currentProject);
   const setCurrentProject = useAppStore((s) => s.setCurrentProject);
+  const saveProjectToDatabase = useAppStore((s) => s.saveProjectToDatabase);
 
   const [costs, setCosts] = useState<CostBlock[]>([]);
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
@@ -43,6 +44,26 @@ export default function CostBuilderStep({ onNext, onBack }: CostBuilderStepProps
       setExpandedBlocks(allIds);
     }
   }, [currentProject?.investments[0]?.costs]);
+
+  // Speichere Kosten in real-time in currentProject wenn sie sich ändern
+  useEffect(() => {
+    if (currentProject?.investments[0] && costs.length > 0) {
+      const updatedProject = { ...currentProject };
+      updatedProject.investments[0] = {
+        ...updatedProject.investments[0],
+        costs: costs as any,
+      };
+      setCurrentProject(updatedProject);
+      console.log('[CostBuilderStep] Auto-saving costs to database:', costs.length);
+
+      // Speichere auch in Datenbank
+      if (currentProject.code && currentProject.id) {
+        saveProjectToDatabase(updatedProject).catch((error) => {
+          console.warn('[CostBuilderStep] Auto-save to database failed:', error);
+        });
+      }
+    }
+  }, [costs]);
 
   const handleNext = () => {
     if (currentProject && currentProject.investments[0]) {

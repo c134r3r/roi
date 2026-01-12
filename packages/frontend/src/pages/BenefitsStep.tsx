@@ -98,6 +98,7 @@ export default function BenefitsStep({ onNext, onBack }: BenefitsStepProps) {
 
   const currentProject = useAppStore((s) => s.currentProject);
   const setCurrentProject = useAppStore((s) => s.setCurrentProject);
+  const saveProjectToDatabase = useAppStore((s) => s.saveProjectToDatabase);
 
   // Lade Benefits aus currentProject wenn Komponente geladen wird
   useEffect(() => {
@@ -119,7 +120,14 @@ export default function BenefitsStep({ onNext, onBack }: BenefitsStepProps) {
         benefits: benefits as any,
       };
       setCurrentProject(updatedProject);
-      console.log('[BenefitsStep] Auto-saving benefits to project:', benefits.length);
+      console.log('[BenefitsStep] Auto-saving benefits to database:', benefits.length);
+
+      // Speichere auch in Datenbank
+      if (currentProject.code && currentProject.id) {
+        saveProjectToDatabase(updatedProject).catch((error) => {
+          console.warn('[BenefitsStep] Auto-save to database failed:', error);
+        });
+      }
     }
   }, [benefits]);
 
