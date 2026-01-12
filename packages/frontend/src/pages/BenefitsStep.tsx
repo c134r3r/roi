@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '../store';
 import { Plus, Trash2, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
@@ -98,6 +98,17 @@ export default function BenefitsStep({ onNext, onBack }: BenefitsStepProps) {
 
   const currentProject = useAppStore((s) => s.currentProject);
   const setCurrentProject = useAppStore((s) => s.setCurrentProject);
+
+  // Lade Benefits aus currentProject wenn Komponente geladen wird
+  useEffect(() => {
+    if (currentProject?.investments[0]?.benefits) {
+      const existingBenefits = currentProject.investments[0].benefits as BenefitBlock[];
+      setBenefits(existingBenefits);
+      // Expandiere alle Blöcke für bessere UX
+      const allIds = new Set(existingBenefits.map(b => b.id));
+      setExpandedBlocks(allIds);
+    }
+  }, [currentProject?.investments[0]?.benefits]);
 
   const handleNext = () => {
     if (!currentProject) return;
