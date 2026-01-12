@@ -32,7 +32,7 @@ app.use(cors({
 }));
 
 // Pass Database to Routes
-app.use((req, res, next) => {
+app.use((req: any, _res: any, next) => {
   (req as any).db = db;
   next();
 });
@@ -41,7 +41,7 @@ app.use((req, res, next) => {
 app.use('/api', apiRoutes);
 
 // Error handling
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({
     success: false,

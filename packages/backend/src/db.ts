@@ -3,7 +3,7 @@
  * Later: Replace with PostgreSQL
  */
 
-import { Project, Investment } from '@roi/shared';
+import { Project } from '@roi/shared';
 import { randomBytes } from 'crypto';
 
 interface ProjectRecord {

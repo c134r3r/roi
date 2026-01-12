@@ -2,24 +2,17 @@
  * ROI Calculator API Routes
  */
 
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import {
   Project,
   Investment,
-  ProjectSettings,
   ApiResponse,
   computeInvestment,
 } from '@roi/shared';
-import { IDatabase } from './database/index.js';
 
-// Type-safe request with database
-interface DatabaseRequest extends Request {
-  db: IDatabase;
-}
-
-const router = Router();
+const router = Router() as any;
 
 // Validation Schemas
 const ProjectSettingsSchema = z.object({
@@ -39,7 +32,7 @@ const CreateProjectSchema = z.object({
 /**
  * POST /api/projects - Neues Projekt erstellen
  */
-router.post('/projects', async (req: DatabaseRequest, res: Response) => {
+router.post('/projects', async (req: any, res: Response) => {
   try {
     const validated = CreateProjectSchema.parse(req.body);
 
@@ -80,7 +73,7 @@ router.post('/projects', async (req: DatabaseRequest, res: Response) => {
 /**
  * GET /api/projects/:code - Projekt laden per Code
  */
-router.get('/projects/:code', async (req: DatabaseRequest, res: Response) => {
+router.get('/projects/:code', async (req: any, res: Response) => {
   try {
     const { code } = req.params;
     const { passphrase } = req.query;
@@ -111,7 +104,7 @@ router.get('/projects/:code', async (req: DatabaseRequest, res: Response) => {
 /**
  * PUT /api/projects/:id - Projekt aktualisieren
  */
-router.put('/projects/:id', async (req: DatabaseRequest, res: Response) => {
+router.put('/projects/:id', async (req: any, res: Response) => {
   try {
     const { id } = req.params;
     const { title, description, investments, settings } = req.body;
@@ -153,7 +146,7 @@ router.put('/projects/:id', async (req: DatabaseRequest, res: Response) => {
 /**
  * POST /api/projects/:id/investments - Neue Investment hinzufügen
  */
-router.post('/projects/:id/investments', async (req: DatabaseRequest, res: Response) => {
+router.post('/projects/:id/investments', async (req: any, res: Response) => {
   try {
     const { id } = req.params;
     const { name, template } = req.body;
@@ -207,14 +200,14 @@ router.post('/projects/:id/investments', async (req: DatabaseRequest, res: Respo
 /**
  * Health Check
  */
-router.get('/health', (req: DatabaseRequest, res: Response) => {
+router.get('/health', (_req: any, res: Response) => {
   res.json({ status: 'ok', version: '1.0.0' });
 });
 
 /**
  * Stats
  */
-router.get('/stats', async (req: DatabaseRequest, res: Response) => {
+router.get('/stats', async (req: any, res: Response) => {
   try {
     const stats = await req.db.getStats();
     res.json(stats);

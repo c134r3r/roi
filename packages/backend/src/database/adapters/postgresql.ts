@@ -3,7 +3,7 @@
  * Zentrale Datenspeicherung für ROI Calculator
  */
 
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 import { Project } from '@roi/shared';
 import { IDatabase } from '../index.js';
 import { randomBytes } from 'crypto';
