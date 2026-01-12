@@ -1,6 +1,6 @@
 import { Download, Share2, TrendingUp, PieChart, BarChart3, Zap } from 'lucide-react';
 import { useAppStore } from '../store';
-import { Investment } from '@roi/shared';
+import { Investment, computeInvestment } from '@roi/shared';
 import { useEffect, useRef } from 'react';
 
 interface ResultsStepProps {
@@ -264,9 +264,26 @@ function CalculationExplanation({ currency }: { currency: string }) {
 }
 
 export default function ResultsStep({ onBack, onNewProject }: ResultsStepProps) {
-  const { currentProject } = useAppStore();
+  const { currentProject, setCurrentProject } = useAppStore();
   const investment = currentProject?.investments[0];
   const currency = currentProject?.settings.currency || 'EUR';
+
+  // Auto-trigger calculation if benefits exist but haven't been calculated yet
+  useEffect(() => {
+    if (
+      currentProject?.investments[0] &&
+      currentProject.investments[0].benefits &&
+      currentProject.investments[0].benefits.length > 0 &&
+      (!currentProject.investments[0].computedKPIs || currentProject.investments[0].computedKPIs.roi === 0)
+    ) {
+      console.log('[ResultsStep] Auto-triggering calculation for benefits...');
+      const inv = currentProject.investments[0];
+      computeInvestment(inv, currentProject.settings.discountRate, currentProject.settings.horizon);
+
+      // Trigger re-render with updated calculations
+      setCurrentProject(currentProject);
+    }
+  }, [currentProject?.investments[0]?.benefits?.length]);
 
   if (!currentProject || !investment) {
     return (

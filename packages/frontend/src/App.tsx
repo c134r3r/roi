@@ -120,6 +120,7 @@ export default function App() {
           step={step}
           projectTitle={currentProject?.title}
           projectCode={currentProject?.code}
+          currentProject={currentProject}
           onStepClick={handleStepChange}
         />
       )}

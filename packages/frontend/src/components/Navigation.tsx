@@ -1,14 +1,16 @@
 import { BarChart3 } from 'lucide-react';
 import ProjectCode from './ProjectCode';
+import { Project } from '@roi/shared';
 
 interface NavigationProps {
   step: string;
   projectTitle?: string;
   projectCode?: string;
+  currentProject?: Project | null;
   onStepClick?: (step: string) => void;
 }
 
-export default function Navigation({ step, projectTitle, projectCode, onStepClick }: NavigationProps) {
+export default function Navigation({ step, projectTitle, projectCode, currentProject, onStepClick }: NavigationProps) {
   const stepLabels: Record<string, string> = {
     basis: 'Projektbasis',
     costs: 'Kosten',
@@ -19,6 +21,9 @@ export default function Navigation({ step, projectTitle, projectCode, onStepClic
 
   const steps = ['basis', 'costs', 'benefits', 'scenarios', 'results'];
   const currentStepIndex = steps.indexOf(step);
+
+  // Überprüfe ob Benefits vorhanden sind (erlaubt Sprung zu Ergebnissen)
+  const hasBenefits = currentProject?.investments[0]?.benefits && currentProject.investments[0].benefits.length > 0;
 
   return (
     <div className="border-b border-gray-200 bg-white">
@@ -37,7 +42,9 @@ export default function Navigation({ step, projectTitle, projectCode, onStepClic
             {steps.map((s, i) => {
               const isCompleted = i < currentStepIndex;
               const isCurrent = i === currentStepIndex;
-              const isClickable = i <= currentStepIndex;
+              // Erlaube Sprung zu Ergebnissen wenn Benefits vorhanden sind
+              const isResults = s === 'results';
+              const isClickable = i <= currentStepIndex || (isResults && hasBenefits);
 
               return (
                 <button
