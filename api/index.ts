@@ -6,9 +6,9 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import express from 'express';
 import cors from 'cors';
-import apiRoutes from '../packages/backend/src/routes.js';
-import { InMemoryDatabase, PostgreSQLDatabase } from '../packages/backend/src/database/index.js';
-import { IDatabase } from '../packages/backend/src/database/index.js';
+import apiRoutes from '../packages/backend/dist/routes.js';
+import { InMemoryDatabase, PostgreSQLDatabase } from '../packages/backend/dist/database/index.js';
+import { IDatabase } from '../packages/backend/dist/database/index.js';
 
 // Initialize database
 let db: IDatabase;
