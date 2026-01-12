@@ -2,8 +2,7 @@
   "buildCommand": "npm --prefix packages/shared install && npm --prefix packages/backend install && npm --prefix packages/frontend install && npm run build",
   "outputDirectory": "packages/frontend/dist",
   "env": {
-    "NODE_ENV": "production",
-    "USE_POSTGRES": "true"
+    "NODE_ENV": "production"
   },
   "functions": {
     "api/index.ts": {
