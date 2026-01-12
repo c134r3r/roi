@@ -5,14 +5,21 @@
 import express from 'express';
 import cors from 'cors';
 import apiRoutes from './routes.js';
-import { InMemoryDatabase } from './database/index.js';
+import { InMemoryDatabase, PostgreSQLDatabase } from './database/index.js';
+import { IDatabase } from './database/index.js';
 
-// Datenbank initialisieren
-const db = new InMemoryDatabase();
+// Datenbank initialisieren (basierend auf Umgebungsvariable)
+let db: IDatabase;
 
-// TODO: PostgreSQL aktivieren
-// import { PostgreSQLDatabase } from './database/index.js';
-// const db = new PostgreSQLDatabase();
+const usePostgres = process.env.USE_POSTGRES === 'true' || !!process.env.DATABASE_URL;
+
+if (usePostgres && process.env.DATABASE_URL) {
+  console.log('🗄️ Using PostgreSQL database...');
+  db = new PostgreSQLDatabase();
+} else {
+  console.log('💾 Using In-Memory database...');
+  db = new InMemoryDatabase();
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -47,7 +54,8 @@ app.listen(PORT, () => {
   console.log(`📊 ROI Calculator Server running on http://localhost:${PORT}`);
   console.log(`Frontend: http://localhost:5173`);
   console.log(`API: http://localhost:${PORT}/api`);
-  console.log(`Database: In-Memory (Production-ready für PostgreSQL - siehe docs/)`);
+  const dbType = usePostgres ? 'PostgreSQL' : 'In-Memory';
+  console.log(`Database: ${dbType}`);
 });
 
 export { db };

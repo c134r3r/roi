@@ -2,7 +2,7 @@
  * ROI Calculator API Routes
  */
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -12,7 +12,12 @@ import {
   ApiResponse,
   computeInvestment,
 } from '@roi/shared';
-import { db } from './db.js';
+import { IDatabase } from './database/index.js';
+
+// Type-safe request with database
+interface DatabaseRequest extends Request {
+  db: IDatabase;
+}
 
 const router = Router();
 
@@ -34,7 +39,7 @@ const CreateProjectSchema = z.object({
 /**
  * POST /api/projects - Neues Projekt erstellen
  */
-router.post('/projects', (req, res) => {
+router.post('/projects', async (req: DatabaseRequest, res: Response) => {
   try {
     const validated = CreateProjectSchema.parse(req.body);
 
@@ -59,7 +64,7 @@ router.post('/projects', (req, res) => {
       project.passphrase = validated.passphrase;
     }
 
-    const saved = db.saveProject(project);
+    const saved = await req.db.saveProject(project);
 
     const response: ApiResponse<Project> = {
       success: true,
@@ -75,12 +80,12 @@ router.post('/projects', (req, res) => {
 /**
  * GET /api/projects/:code - Projekt laden per Code
  */
-router.get('/projects/:code', (req, res) => {
+router.get('/projects/:code', async (req: DatabaseRequest, res: Response) => {
   try {
     const { code } = req.params;
     const { passphrase } = req.query;
 
-    const project = db.getProjectByCode(code, passphrase as string | undefined);
+    const project = await req.db.getProjectByCode(code, passphrase as string | undefined);
 
     if (!project) {
       return res.status(404).json({
@@ -106,12 +111,12 @@ router.get('/projects/:code', (req, res) => {
 /**
  * PUT /api/projects/:id - Projekt aktualisieren
  */
-router.put('/projects/:id', (req, res) => {
+router.put('/projects/:id', async (req: DatabaseRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { title, description, investments, settings } = req.body;
 
-    const project = db.getProjectById(id);
+    const project = await req.db.getProjectById(id);
     if (!project) {
       return res.status(404).json({
         success: false,
@@ -129,7 +134,7 @@ router.put('/projects/:id', (req, res) => {
       computeInvestment(investment, project.settings.discountRate, project.settings.horizon);
     }
 
-    const updated = db.updateProject(project);
+    const updated = await req.db.updateProject(project);
 
     const response: ApiResponse<Project> = {
       success: true,
@@ -148,12 +153,12 @@ router.put('/projects/:id', (req, res) => {
 /**
  * POST /api/projects/:id/investments - Neue Investment hinzufügen
  */
-router.post('/projects/:id/investments', (req, res) => {
+router.post('/projects/:id/investments', async (req: DatabaseRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { name, template } = req.body;
 
-    const project = db.getProjectById(id);
+    const project = await req.db.getProjectById(id);
     if (!project) {
       return res.status(404).json({
         success: false,
@@ -183,7 +188,7 @@ router.post('/projects/:id/investments', (req, res) => {
     };
 
     project.investments.push(investment);
-    db.updateProject(project);
+    await req.db.updateProject(project);
 
     const response: ApiResponse<Investment> = {
       success: true,
@@ -202,15 +207,23 @@ router.post('/projects/:id/investments', (req, res) => {
 /**
  * Health Check
  */
-router.get('/health', (req, res) => {
+router.get('/health', (req: DatabaseRequest, res: Response) => {
   res.json({ status: 'ok', version: '1.0.0' });
 });
 
 /**
  * Stats
  */
-router.get('/stats', (req, res) => {
-  res.json(db.getStats());
+router.get('/stats', async (req: DatabaseRequest, res: Response) => {
+  try {
+    const stats = await req.db.getStats();
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve stats',
+    });
+  }
 });
 
 /**
