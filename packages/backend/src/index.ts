@@ -26,10 +26,37 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
+
+// CORS Konfiguration mit erweiterten Optionen
+const allowedOrigins = [
+  'http://localhost:5173', // Vite dev server
+  'http://localhost:3000', // Alternative dev port
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000',
+  process.env.CORS_ORIGIN, // Environment variable
+].filter(Boolean);
+
+console.log('🔓 CORS Origins allowed:', allowedOrigins);
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ CORS rejected origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// Explicit OPTIONS handling
+app.options('*', cors());
 
 // Pass Database to Routes
 app.use((req: any, _res: any, next) => {

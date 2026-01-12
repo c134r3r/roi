@@ -135,10 +135,12 @@ export class ApiClient {
   }
 
   async createProject(project: Project) {
-    console.log(`[API] POST ${this.baseUrl}/projects`, project.title);
+    const url = `${this.baseUrl}/projects`;
+    console.log(`[API] POST ${url}`, project.title);
+    console.log(`[API] Base URL: ${this.baseUrl}`);
 
     try {
-      const response = await fetch(`${this.baseUrl}/projects`, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -159,7 +161,7 @@ export class ApiClient {
       console.log(`[API] Project created:`, result.code);
       return result;
     } catch (error) {
-      console.error('[API] Failed to create project:', error);
+      console.error('[API] Failed to create project at:', url, error);
       throw error;
     }
   }
@@ -182,13 +184,14 @@ export class ApiClient {
   }
 
   async loadProject(code: string, passphrase?: string) {
-    const url = new URL(`/api/projects/${code}`, this.baseUrl);
-    if (passphrase) url.searchParams.set('passphrase', passphrase);
+    const url = `${this.baseUrl}/projects/${code}`;
+    const urlWithParams = new URL(url);
+    if (passphrase) urlWithParams.searchParams.set('passphrase', passphrase);
 
-    console.log(`[API] Loading project:`, code);
+    console.log(`[API] Loading project:`, code, 'from', urlWithParams.toString());
 
     try {
-      const response = await fetch(url);
+      const response = await fetch(urlWithParams.toString());
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: Project not found`);
       }
