@@ -59,13 +59,13 @@ psql -U roi_user -d roi_calculator -h localhost
 
 ```env
 # Variante 1: Standard-User (postgres)
-DATABASE_URL=postgresql://postgres:password@localhost:5432/roi_calculator
+DATABASE_URLROI=postgresql://postgres:password@localhost:5432/roi_calculator
 
 # Variante 2: Dedizierter User
-DATABASE_URL=postgresql://roi_user:your_secure_password@localhost:5432/roi_calculator
+DATABASE_URLROI=postgresql://roi_user:your_secure_password@localhost:5432/roi_calculator
 
 # Variante 3: Mit Unix Socket (lokal, empfohlen)
-DATABASE_URL=postgresql://roi_user@localhost/roi_calculator
+DATABASE_URLROI=postgresql://roi_user@localhost/roi_calculator
 
 # Aktiviere PostgreSQL
 USE_POSTGRES=true
@@ -176,8 +176,8 @@ curl http://localhost:3001/api/stats
 
 ## Fehlersuche
 
-### "DATABASE_URL not set"
-- Stelle sicher, dass `.env` die `DATABASE_URL` enthält
+### "DATABASE_URLROI not set"
+- Stelle sicher, dass `.env` die `DATABASE_URLROI` enthält
 - Format: `postgresql://user:password@host:port/database`
 
 ### "Connection refused"
@@ -242,7 +242,7 @@ default_pool_size = 25
    ```
 
 2. **PostgreSQL aktivieren**:
-   - `DATABASE_URL` in `.env` setzen
+   - `DATABASE_URLROI` in `.env` setzen
    - Server neustarten
 
 3. **Schema wird automatisch erstellt**:

@@ -11,9 +11,9 @@ import { IDatabase } from './database/index.js';
 // Datenbank initialisieren (basierend auf Umgebungsvariable)
 let db: IDatabase;
 
-const usePostgres = process.env.USE_POSTGRES === 'true' || !!process.env.DATABASE_URL;
+const usePostgres = process.env.USE_POSTGRES === 'true' || !!process.env.DATABASE_URLROI;
 
-if (usePostgres && process.env.DATABASE_URL) {
+if (usePostgres && process.env.DATABASE_URLROI) {
   console.log('🗄️ Using PostgreSQL database...');
   db = new PostgreSQLDatabase();
 } else {

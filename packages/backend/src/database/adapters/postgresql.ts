@@ -13,10 +13,10 @@ export class PostgreSQLDatabase implements IDatabase {
   private pool: Pool;
 
   constructor() {
-    const dbUrl = process.env.DATABASE_URL;
+    const dbUrl = process.env.DATABASE_URLROI;
     if (!dbUrl) {
       throw new Error(
-        'DATABASE_URL environment variable not set. See docs/POSTGRESQL_SETUP.md'
+        'DATABASE_URLROI environment variable not set. See docs/POSTGRESQL_SETUP.md'
       );
     }
 

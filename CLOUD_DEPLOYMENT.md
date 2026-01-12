@@ -26,7 +26,7 @@ vercel deploy --prod
 
 #### Backend (Vercel)
 ```
-DATABASE_URL=postgresql://...  # Von NEON (postgres://...)
+DATABASE_URLROI=postgresql://...  # Von NEON (postgres://...)
 PORT=3001
 NODE_ENV=production
 CORS_ORIGIN=https://your-frontend-domain.vercel.app
@@ -60,7 +60,7 @@ Backend:  https://yourapp.vercel.app/api/
 
 ```bash
 # Backend
-DATABASE_URL="postgresql://user:password@host/database"
+DATABASE_URLROI="postgresql://user:password@host/database"
 CORS_ORIGIN="https://your-frontend-domain.vercel.app"
 USE_POSTGRES=true
 
@@ -96,7 +96,7 @@ Nach dem Deployment:
 - Lösung: `CORS_ORIGIN` im Backend anpassen
 
 ### Fehler: "Project not found" nach Create
-- Überprüfe: `DATABASE_URL` zeigt auf NEON
+- Überprüfe: `DATABASE_URLROI` zeigt auf NEON
 - Überprüfe: Backend lädt PostgreSQL-Adapter
 
 ## 🔐 Sicherheit

@@ -41,7 +41,7 @@ postgresql://neon_user:password@ep-xxx.region.neon.tech/roi_calculator?sslmode=r
 1. Vercel Dashboard → Projekt → Settings
 2. → "Environment Variables"
 3. Neue Variable hinzufügen:
-   - **Name**: `DATABASE_URL`
+   - **Name**: `DATABASE_URLROI`
    - **Value**: Dein NEON Connection String
    - **Environments**: Production, Preview, Development
 
@@ -59,7 +59,7 @@ npm i -g vercel
 cd /path/to/roi
 
 # Environment Variable setzen
-vercel env add DATABASE_URL
+vercel env add DATABASE_URLROI
 # Paste dein NEON Connection String
 # Select Production, Preview, Development
 
@@ -75,7 +75,7 @@ vercel env ls
 
 ```env
 # NEON Connection String (aus NEON Dashboard kopieren)
-DATABASE_URL=postgresql://neon_user:password@ep-xxx.region.neon.tech/roi_calculator?sslmode=require
+DATABASE_URLROI=postgresql://neon_user:password@ep-xxx.region.neon.tech/roi_calculator?sslmode=require
 
 # Server
 PORT=3001
@@ -165,7 +165,7 @@ WHERE last_accessed < NOW() - INTERVAL '60 days';
   "buildCommand": "npm run build",
   "outputDirectory": "packages/frontend/dist",
   "env": {
-    "DATABASE_URL": "@database_url"
+    "DATABASE_URLROI": "@database_url"
   },
   "functions": {
     "packages/backend/src/index.ts": {
@@ -217,7 +217,7 @@ Error: connect ECONNREFUSED
 ```
 
 **Lösungen:**
-1. Überprüfe `DATABASE_URL` in Vercel Settings
+1. Überprüfe `DATABASE_URLROI` in Vercel Settings
 2. Nutze `?sslmode=require` im Connection String
 3. NEON Projekt ist nicht aktiv - prüfe NEON Dashboard
 
@@ -273,7 +273,7 @@ postgresql://user:password@pooler.host:6432/database
 - Kombinieren für Debugging
 
 ### 4. Sicherheit
-- **Niemals** DATABASE_URL in Code committen
+- **Niemals** DATABASE_URLROI in Code committen
 - **Nur** in `.env` (lokal) und Vercel Secrets
 - Nutze `?sslmode=require` immer
 
@@ -289,7 +289,7 @@ postgresql://user:password@pooler.host:6432/database
 - [ ] NEON Account erstellt
 - [ ] Database `roi_calculator` erstellt
 - [ ] Connection String mit `?sslmode=require` kopiert
-- [ ] DATABASE_URL in Vercel hinzugefügt
+- [ ] DATABASE_URLROI in Vercel hinzugefügt
 - [ ] `.env` lokal konfiguriert
 - [ ] Schema auto-erstellt (Server startet)
 - [ ] Health Check funktioniert

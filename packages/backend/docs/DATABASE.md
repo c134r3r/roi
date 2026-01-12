@@ -22,7 +22,7 @@ npm run dev
 ### Scenario B: Auf Vercel mit NEON
 1. Account auf https://neon.tech erstellen
 2. Database erstellen → Connection String kopieren
-3. In Vercel: Settings → Environment Variables → `DATABASE_URL` setzen
+3. In Vercel: Settings → Environment Variables → `DATABASE_URLROI` setzen
 4. Code push → automatisches Deployment
 
 **→ Siehe: `docs/NEON_SETUP.md` für detaillierte Anleitung**
@@ -30,7 +30,7 @@ npm run dev
 ### Scenario C: Lokale PostgreSQL
 1. PostgreSQL installieren
 2. Database `roi_calculator` erstellen
-3. `.env` mit `DATABASE_URL` konfigurieren
+3. `.env` mit `DATABASE_URLROI` konfigurieren
 4. `npm run dev`
 
 **→ Siehe: `docs/POSTGRESQL_SETUP.md` für detaillierte Anleitung**
@@ -43,16 +43,16 @@ Das System wählt automatisch:
 
 ```typescript
 // In packages/backend/src/index.ts
-const usePostgres = process.env.USE_POSTGRES === 'true' || !!process.env.DATABASE_URL;
+const usePostgres = process.env.USE_POSTGRES === 'true' || !!process.env.DATABASE_URLROI;
 
-if (usePostgres && process.env.DATABASE_URL) {
-  db = new PostgreSQLDatabase();  // ← PostgreSQL wenn DATABASE_URL gesetzt
+if (usePostgres && process.env.DATABASE_URLROI) {
+  db = new PostgreSQLDatabase();  // ← PostgreSQL wenn DATABASE_URLROI gesetzt
 } else {
   db = new InMemoryDatabase();     // ← In-Memory default
 }
 ```
 
-**Praktisch:** Einfach nur `DATABASE_URL` setzen, alles andere funktioniert automagisch!
+**Praktisch:** Einfach nur `DATABASE_URLROI` setzen, alles andere funktioniert automagisch!
 
 ## 3. Connection Strings
 
@@ -78,7 +78,7 @@ postgresql://roi_user:password@pooler.example.com:6432/roi_calculator
 
 ```env
 # Erforderlich für PostgreSQL
-DATABASE_URL=postgresql://user:pass@host:5432/roi_calculator
+DATABASE_URLROI=postgresql://user:pass@host:5432/roi_calculator
 
 # Optional
 USE_POSTGRES=true          # Explizit PostgreSQL erzwingen
@@ -279,7 +279,7 @@ npm run dev  # Siehe console output
 ### Datenbank direkt prüfen
 ```bash
 # PostgreSQL
-psql $DATABASE_URL
+psql $DATABASE_URLROI
 SELECT * FROM projects;
 
 # NEON
@@ -290,7 +290,7 @@ psql "postgresql://user:pass@ep-xxx.region.neon.tech/roi_calculator?sslmode=requ
 
 | Fehler | Ursache | Lösung |
 |--------|--------|--------|
-| "DATABASE_URL not set" | Env var fehlt | In Vercel Settings setzen |
+| "DATABASE_URLROI not set" | Env var fehlt | In Vercel Settings setzen |
 | "ECONNREFUSED" | PostgreSQL läuft nicht | `brew services start postgresql` |
 | "password authentication failed" | Falsches Passwort | Connection String überprüfen |
 | "timeout expired" | Datenbank zu weit weg | NEON Region ändern |
@@ -311,7 +311,7 @@ await client.query(`
 ### Daten-Migrations
 ```bash
 # Manuell mit PostgreSQL
-psql $DATABASE_URL -c "UPDATE projects SET ... WHERE ..."
+psql $DATABASE_URLROI -c "UPDATE projects SET ... WHERE ..."
 
 # Oder Node.js Script
 node scripts/migrate-data.js
@@ -321,7 +321,7 @@ node scripts/migrate-data.js
 
 - [ ] NEON Account erstellt und Projekt konfiguriert
 - [ ] Connection String aus NEON kopiert
-- [ ] DATABASE_URL in Vercel Environment Variables gesetzt
+- [ ] DATABASE_URLROI in Vercel Environment Variables gesetzt
 - [ ] `.env` hat NICHT den Secret - nur im Vercel Dashboard!
 - [ ] `.env` ist in `.gitignore` eingetragen
 - [ ] HTTPS wird erzwungen (`?sslmode=require`)
