@@ -3,9 +3,10 @@ import { BarChart3 } from 'lucide-react';
 interface NavigationProps {
   step: string;
   projectTitle?: string;
+  onStepClick?: (step: string) => void;
 }
 
-export default function Navigation({ step, projectTitle }: NavigationProps) {
+export default function Navigation({ step, projectTitle, onStepClick }: NavigationProps) {
   const stepLabels: Record<string, string> = {
     basis: 'Projektbasis',
     costs: 'Kosten',
@@ -27,19 +28,32 @@ export default function Navigation({ step, projectTitle }: NavigationProps) {
           </div>
         </div>
 
-        {/* Progress Bar */}
+        {/* Clickable Navigation Tabs */}
         <div className="space-y-2">
-          <div className="flex justify-between text-xs text-gray-600">
-            {steps.map((s, i) => (
-              <span
-                key={s}
-                className={`font-medium ${
-                  i <= currentStepIndex ? 'text-brand-600' : 'text-gray-400'
-                }`}
-              >
-                {stepLabels[s]}
-              </span>
-            ))}
+          <div className="flex justify-between text-xs text-gray-600 gap-2">
+            {steps.map((s, i) => {
+              const isCompleted = i < currentStepIndex;
+              const isCurrent = i === currentStepIndex;
+              const isClickable = i <= currentStepIndex;
+
+              return (
+                <button
+                  key={s}
+                  onClick={() => isClickable && onStepClick?.(s)}
+                  disabled={!isClickable}
+                  className={`font-medium flex-1 py-2 px-2 rounded transition-all ${
+                    isCurrent
+                      ? 'text-brand-600 bg-brand-50 border-b-2 border-brand-600'
+                      : isCompleted
+                      ? 'text-brand-600 hover:bg-brand-50 cursor-pointer'
+                      : 'text-gray-400 cursor-not-allowed'
+                  }`}
+                  title={isClickable ? `Zu ${stepLabels[s]} springen` : 'Bitte füllen Sie zuerst die vorherigen Schritte aus'}
+                >
+                  {stepLabels[s]}
+                </button>
+              );
+            })}
           </div>
           <div className="w-full bg-gray-200 rounded-full h-1">
             <div

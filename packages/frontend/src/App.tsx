@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppStore, apiClient } from './store';
+import { computeInvestment } from '@roi/shared';
 import LandingPage from './pages/LandingPage';
 import ProjectBasisStep from './pages/ProjectBasisStep';
 import CostBuilderStep from './pages/CostBuilderStep';
@@ -18,13 +19,33 @@ export default function App() {
   const isLoading = useAppStore((s) => s.isLoading);
   const setIsLoading = useAppStore((s) => s.setIsLoading);
 
+  // Live-Berechnung triggern wenn Daten sich ändern
+  const triggerCalculation = () => {
+    if (currentProject?.investments[0]) {
+      const investment = currentProject.investments[0];
+      computeInvestment(
+        investment,
+        currentProject.settings.discountRate,
+        currentProject.settings.horizon
+      );
+      // Force Re-render durch State-Update
+      setCurrentProject(currentProject);
+    }
+  };
+
+  // Navigation mit Live-Berechnung
+  const handleStepChange = (newStep: string) => {
+    triggerCalculation();
+    setStep(newStep as Step);
+  };
+
   const renderStep = () => {
     switch (step) {
       case 'landing':
         return (
           <LandingPage
-            onNewProject={() => setStep('basis')}
-            onLoadProject={() => setStep('load')}
+            onNewProject={() => handleStepChange('basis')}
+            onLoadProject={() => handleStepChange('load')}
           />
         );
       case 'load':
@@ -32,46 +53,46 @@ export default function App() {
           <LoadProject
             onProjectLoaded={(project) => {
               setCurrentProject(project);
-              setStep('basis');
+              handleStepChange('basis');
             }}
-            onCreateNew={() => setStep('basis')}
+            onCreateNew={() => handleStepChange('basis')}
           />
         );
       case 'basis':
         return (
           <ProjectBasisStep
-            onNext={() => setStep('costs')}
-            onBack={() => setStep('landing')}
+            onNext={() => handleStepChange('costs')}
+            onBack={() => handleStepChange('landing')}
           />
         );
       case 'costs':
         return (
           <CostBuilderStep
-            onNext={() => setStep('benefits')}
-            onBack={() => setStep('basis')}
+            onNext={() => handleStepChange('benefits')}
+            onBack={() => handleStepChange('basis')}
           />
         );
       case 'benefits':
         return (
           <BenefitsStep
-            onNext={() => setStep('scenarios')}
-            onBack={() => setStep('costs')}
+            onNext={() => handleStepChange('scenarios')}
+            onBack={() => handleStepChange('costs')}
           />
         );
       case 'scenarios':
         return (
           <ScenariosStep
-            onNext={() => setStep('results')}
-            onBack={() => setStep('benefits')}
+            onNext={() => handleStepChange('results')}
+            onBack={() => handleStepChange('benefits')}
           />
         );
       case 'results':
         return (
           <ResultsStep
-            onBack={() => setStep('scenarios')}
+            onBack={() => handleStepChange('scenarios')}
             onNewProject={() => {
               setCurrentProject(null);
-              setStep('landing');
+              handleStepChange('landing');
             }}
           />
         );
@@ -82,7 +103,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {step !== 'landing' && <Navigation step={step} projectTitle={currentProject?.title} />}
+      {step !== 'landing' && (
+        <Navigation
+          step={step}
+          projectTitle={currentProject?.title}
+          onStepClick={handleStepChange}
+        />
+      )}
       <div className="max-w-6xl mx-auto px-4 py-8">
         {isLoading && (
           <div className="fixed inset-0 bg-black/10 flex items-center justify-center">
