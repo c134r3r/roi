@@ -110,6 +110,19 @@ export default function BenefitsStep({ onNext, onBack }: BenefitsStepProps) {
     }
   }, [currentProject?.investments[0]?.benefits]);
 
+  // Speichere Benefits in real-time in currentProject wenn sie sich ändern
+  useEffect(() => {
+    if (currentProject?.investments[0] && benefits.length > 0) {
+      const updatedProject = { ...currentProject };
+      updatedProject.investments[0] = {
+        ...updatedProject.investments[0],
+        benefits: benefits as any,
+      };
+      setCurrentProject(updatedProject);
+      console.log('[BenefitsStep] Auto-saving benefits to project:', benefits.length);
+    }
+  }, [benefits]);
+
   const handleNext = () => {
     if (!currentProject) return;
 

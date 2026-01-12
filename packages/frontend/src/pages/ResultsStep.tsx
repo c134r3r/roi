@@ -278,7 +278,58 @@ export default function ResultsStep({ onBack, onNewProject }: ResultsStepProps) 
     ) {
       console.log('[ResultsStep] Auto-triggering calculation for benefits...');
       const inv = currentProject.investments[0];
-      computeInvestment(inv, currentProject.settings.discountRate, currentProject.settings.horizon);
+      const horizon = currentProject.settings.horizon || 3;
+
+      // Format benefits with cashflow calculations if not already done
+      const formattedBenefits = inv.benefits.map((b: any) => {
+        // Check if already formatted (has cashflowByYear)
+        if (b.cashflowByYear && b.cashflowByYear.length > 0) {
+          return b;
+        }
+
+        // Otherwise, calculate annual value and format
+        const calculateBenefitValue = (benefit: any): number => {
+          const params = benefit.parameters || {};
+          switch (benefit.type) {
+            case 'TIME_SAVINGS':
+              return (params.hoursPerYear?.value || 0) * (params.hourlyRate?.value || 0);
+            case 'ERROR_REDUCTION':
+              return (params.errorsPerYear?.value || 0) * (params.costPerError?.value || 0) * ((params.reductionPercent?.value || 0) / 100);
+            case 'REVENUE':
+              return (params.additionalRevenue?.value || 0) * ((params.profitMargin?.value || 0) / 100);
+            case 'COST_REDUCTION':
+              return (params.currentCosts?.value || 0) * ((params.reductionPercent?.value || 0) / 100);
+            case 'OTHER':
+              return params.annualValue?.value || 0;
+            default:
+              return 0;
+          }
+        };
+
+        const annualValue = calculateBenefitValue(b);
+        console.log('[ResultsStep] Formatting benefit:', { name: b.name, annualValue });
+
+        return {
+          ...b,
+          cashflowByYear: new Array(horizon).fill(annualValue),
+          confidenceBand:
+            b.confidence === 'LOW'
+              ? { low: 0.5, high: 0.7 }
+              : b.confidence === 'HIGH'
+                ? { low: 0.1, high: 0.1 }
+                : { low: 0.3, high: 0.3 },
+        };
+      });
+
+      inv.benefits = formattedBenefits;
+
+      // Now compute investment with formatted benefits
+      computeInvestment(inv, currentProject.settings.discountRate, horizon);
+
+      console.log('[ResultsStep] Calculation complete:', {
+        roi: inv.computedKPIs.roi,
+        npv: inv.computedKPIs.npv,
+      });
 
       // Trigger re-render with updated calculations
       setCurrentProject(currentProject);
