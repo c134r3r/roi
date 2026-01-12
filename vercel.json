@@ -1,6 +1,14 @@
 {
-  "buildCommand": "npm --prefix packages/shared run build && npm --prefix packages/frontend run build",
-  "installCommand": "npm install && npm --prefix packages/shared install && npm --prefix packages/frontend install",
-  "outputDirectory": "packages/frontend/dist"
+  "buildCommand": "npm run install:all && npm run build",
+  "outputDirectory": "packages/frontend/dist",
+  "env": {
+    "NODE_ENV": "production",
+    "USE_POSTGRES": "true"
+  },
+  "functions": {
+    "api/index.ts": {
+      "memory": 3008,
+      "maxDuration": 30
+    }
+  }
 }
-

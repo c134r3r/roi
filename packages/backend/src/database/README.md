@@ -28,7 +28,7 @@ const db = new InMemoryDatabase();
 
 // TODO: Production mit PostgreSQL
 // import { PostgreSQLDatabase } from './database/index.js';
-// const db = new PostgreSQLDatabase(process.env.DATABASE_URL);
+// const db = new PostgreSQLDatabase(process.env.DATABASE_URLROI);
 ```
 
 ### In Routes:

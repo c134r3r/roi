@@ -36,6 +36,7 @@ function Tooltip({ text }: { text: string }) {
 
 export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepProps) {
   const setCurrentProject = useAppStore((s) => s.setCurrentProject);
+  const saveProjectToDatabase = useAppStore((s) => s.saveProjectToDatabase);
   const setIsLoading = useAppStore((s) => s.setIsLoading);
   const setError = useAppStore((s) => s.setError);
   const currentProject = useAppStore((s) => s.currentProject);
@@ -68,48 +69,19 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
         throw new Error('Projektname ist erforderlich');
       }
 
-      const projectData = {
+      // Erstelle Projekt lokal
+      const newProject: Project = {
+        id: uuidv4(),
+        code: '', // Wird später generiert beim Speichern in der Datenbank
         title: formData.projectName,
         description: formData.projectDescription,
-        settings: {
-          currency: formData.currency,
-          horizon: parseInt(formData.horizon),
-          discountRate: formData.discountRate / 100,
-          baseCurrency: formData.currency,
-        },
-      };
-
-      console.log('Creating project with data:', projectData);
-
-      try {
-        const response = await apiClient.createProject(projectData);
-
-        console.log('API Response:', response);
-
-        if (response && response.success && response.data) {
-          setCurrentProject(response.data);
-          setIsLoading(false);
-          onNext();
-          return;
-        }
-      } catch (apiError) {
-        console.warn('Backend nicht erreichbar, verwende lokale Speicherung:', apiError);
-        // Fallback: Erstelle Projekt lokal, wenn Backend nicht funktioniert
-      }
-
-      // Fallback: Erstelle Projekt lokal für MVP
-      const localProject: Project = {
-        id: uuidv4(),
-        code: '', // Wird später generiert beim Speichern
-        title: projectData.title,
-        description: projectData.description,
         createdAt: new Date(),
         updatedAt: new Date(),
         versions: [],
         investments: [
           {
             id: uuidv4(),
-            name: projectData.title,
+            name: formData.projectName,
             status: 'DRAFT',
             costs: [],
             benefits: [],
@@ -128,17 +100,44 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
           } as Investment,
         ],
         settings: {
-          currency: projectData.settings.currency as any,
-          horizon: projectData.settings.horizon as any,
-          discountRate: projectData.settings.discountRate,
-          baseCurrency: projectData.settings.baseCurrency,
+          currency: formData.currency as any,
+          horizon: parseInt(formData.horizon),
+          discountRate: formData.discountRate / 100,
+          baseCurrency: formData.currency,
         },
       };
 
-      console.log('Using local fallback project:', localProject);
-      setCurrentProject(localProject);
-      setIsLoading(false);
-      onNext();
+      console.log('Created local project:', newProject.title);
+
+      // Speichere in Zustand
+      setCurrentProject(newProject);
+
+      // Speichere das Projekt in der Datenbank
+      try {
+        console.log('[ProjectBasisStep] Saving project to database...');
+        const savedProject = await saveProjectToDatabase(newProject);
+        console.log('[ProjectBasisStep] Project saved to database with code:', savedProject.code);
+        setCurrentProject(savedProject);
+        setIsLoading(false);
+        onNext();
+      } catch (dbError) {
+        console.error('[ProjectBasisStep] Database save failed:', dbError);
+
+        // Fallback: Arbeite lokal weiter
+        console.log('[ProjectBasisStep] Falling back to local project...');
+        newProject.code = 'LOCAL-' + uuidv4().slice(0, 8).toUpperCase();
+        setCurrentProject(newProject);
+        setIsLoading(false);
+
+        // Zeige Warnung aber blockiere nicht
+        setLocalError('⚠️ Datenbank nicht erreichbar. Arbeite lokal - wird später synchronisiert.');
+
+        // Nach 3 Sekunden weitermachen
+        setTimeout(() => {
+          setLocalError('');
+          onNext();
+        }, 3000);
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unbekannter Fehler';
       console.error('Error creating project:', errorMsg, error);

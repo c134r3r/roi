@@ -237,7 +237,7 @@ export class PostgreSQLDatabase implements IDatabase {
 import { PostgreSQLDatabase } from './database/index.js';
 
 // PostgreSQL aktivieren
-const connectionString = process.env.DATABASE_URL ||
+const connectionString = process.env.DATABASE_URLROI ||
   'postgresql://roi_user:roi_password@localhost:5432/roi_calculator';
 
 export const db = new PostgreSQLDatabase(connectionString);
@@ -247,10 +247,10 @@ export const db = new PostgreSQLDatabase(connectionString);
 
 ```bash
 # .env.local (lokal)
-DATABASE_URL=postgresql://roi_user:roi_password@localhost:5432/roi_calculator
+DATABASE_URLROI=postgresql://roi_user:roi_password@localhost:5432/roi_calculator
 
 # Vercel Environment Variables (Production)
-DATABASE_URL=postgresql://username:password@db.railway.app:5432/roi_calculator
+DATABASE_URLROI=postgresql://username:password@db.railway.app:5432/roi_calculator
 ```
 
 ---
@@ -284,7 +284,7 @@ npm run dev
 ```bash
 # 1. Erstelle Projekt auf railway.app
 # 2. Verbinde PostgreSQL Plugin
-# 3. Kopiere DATABASE_URL von Railway
+# 3. Kopiere DATABASE_URLROI von Railway
 # 4. Setze Environment Variable im Backend
 # 5. Deploy
 ```

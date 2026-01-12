@@ -4,16 +4,20 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   define: {
-    __API_URL__: JSON.stringify(process.env.VITE_API_URL || 'http://localhost:3001'),
+    // Set API URL from environment, or empty string for same-origin in production
+    __API_URL__: JSON.stringify(process.env.VITE_API_URL || ''),
   },
   server: {
     port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
+    // Only use proxy for local development
+    ...(process.env.NODE_ENV === 'development' && {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+        },
       },
-    },
+    }),
   },
   build: {
     outDir: 'dist',

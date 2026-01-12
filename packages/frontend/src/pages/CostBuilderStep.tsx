@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '../store';
 import { Plus, Trash2, ChevronDown, ChevronUp, Edit2, Check, X } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
@@ -28,6 +28,42 @@ interface CostBuilderStepProps {
 export default function CostBuilderStep({ onNext, onBack }: CostBuilderStepProps) {
   const currentProject = useAppStore((s) => s.currentProject);
   const setCurrentProject = useAppStore((s) => s.setCurrentProject);
+  const saveProjectToDatabase = useAppStore((s) => s.saveProjectToDatabase);
+
+  const [costs, setCosts] = useState<CostBlock[]>([]);
+  const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
+  const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
+  const [editingBlockName, setEditingBlockName] = useState<string>('');
+
+  // Lade Kosten aus currentProject wenn Komponente geladen wird
+  useEffect(() => {
+    if (currentProject?.investments[0]?.costs && currentProject.investments[0].costs.length > 0) {
+      // Wenn bereits Kosten vorhanden sind, lade diese
+      setCosts(currentProject.investments[0].costs as CostBlock[]);
+      const allIds = new Set(currentProject.investments[0].costs.map(c => c.id));
+      setExpandedBlocks(allIds);
+    }
+  }, [currentProject?.investments[0]?.costs]);
+
+  // Speichere Kosten in real-time in currentProject wenn sie sich ändern
+  useEffect(() => {
+    if (currentProject?.investments[0] && costs.length > 0) {
+      const updatedProject = { ...currentProject };
+      updatedProject.investments[0] = {
+        ...updatedProject.investments[0],
+        costs: costs as any,
+      };
+      setCurrentProject(updatedProject);
+      console.log('[CostBuilderStep] Auto-saving costs to database:', costs.length);
+
+      // Speichere auch in Datenbank
+      if (currentProject.code && currentProject.id) {
+        saveProjectToDatabase(updatedProject).catch((error) => {
+          console.warn('[CostBuilderStep] Auto-save to database failed:', error);
+        });
+      }
+    }
+  }, [costs]);
 
   const handleNext = () => {
     if (currentProject && currentProject.investments[0]) {
@@ -37,29 +73,6 @@ export default function CostBuilderStep({ onNext, onBack }: CostBuilderStepProps
     }
     onNext();
   };
-
-  const [costs, setCosts] = useState<CostBlock[]>([
-    {
-      id: uuidv4(),
-      category: 'LICENSES',
-      name: 'Lizenzen (First Year)',
-      annualGrowth: 0.03,
-      items: [
-        {
-          id: uuidv4(),
-          description: 'User Lizenzen',
-          quantity: 50,
-          unit: 'User',
-          unitPrice: 15,
-          frequency: 'MONTHLY',
-        },
-      ],
-    },
-  ]);
-
-  const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set(['licenses']));
-  const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
-  const [editingBlockName, setEditingBlockName] = useState<string>('');
 
   const toggleExpanded = (id: string) => {
     setExpandedBlocks((prev) => {
