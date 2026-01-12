@@ -13,13 +13,20 @@ import { IDatabase } from '../packages/backend/dist/database/index.js';
 // Initialize database
 let db: IDatabase;
 
-const usePostgres = process.env.USE_POSTGRES === 'true' || !!process.env.DATABASE_URLROI;
+// Use PostgreSQL only if DATABASE_URLROI is explicitly set
+const usePostgres = !!process.env.DATABASE_URLROI;
 
-if (usePostgres && process.env.DATABASE_URLROI) {
+if (usePostgres) {
   console.log('🗄️ Using PostgreSQL database (NEON)');
-  db = new PostgreSQLDatabase();
+  try {
+    db = new PostgreSQLDatabase();
+  } catch (error) {
+    console.error('❌ Failed to connect to PostgreSQL, falling back to In-Memory:', error);
+    db = new InMemoryDatabase();
+  }
 } else {
-  console.log('💾 Using In-Memory database');
+  console.log('💾 Using In-Memory database (local mode)');
+  console.log('💡 Projects are stored in browser localStorage');
   db = new InMemoryDatabase();
 }
 
