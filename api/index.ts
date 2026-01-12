@@ -57,5 +57,7 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   });
 });
 
-// Export for Vercel
-export default app;
+// Vercel serverless handler
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  return app(req, res);
+}
