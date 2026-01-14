@@ -349,36 +349,41 @@ function applyScenarioAndCompute(
   const costInflation = overrides['costInflation'] || 0;
   const adoptionDelay = overrides['adoptionDelay'] || 0;
 
-  const modifiedCashflows = generateCashflows(investment, discountRate, horizon)
-    .map((cf, idx) => {
-      // Start with costs adjusted by inflation
-      let adjustedCosts = cf.costs * (1 + costInflation);
+  // Create a deep copy of the investment with modified benefits and costs
+  const modifiedInvestment = JSON.parse(JSON.stringify(investment));
 
-      // Start with baseline benefits
-      let adjustedBenefits = cf.benefits;
+  // Apply cost inflation
+  for (const costBlock of modifiedInvestment.costs) {
+    costBlock.annualGrowth = (costBlock.annualGrowth || 0) + costInflation;
+  }
 
-      // Apply benefit-specific overrides
-      for (const [key, factor] of Object.entries(overrides)) {
-        // Skip special overrides
-        if (key === 'costInflation' || key === 'adoptionDelay') continue;
+  // Apply benefit-specific overrides by modifying cashflowByYear
+  for (const [key, factor] of Object.entries(overrides)) {
+    // Skip special overrides
+    if (key === 'costInflation' || key === 'adoptionDelay') continue;
 
-        const benefit = investment.benefits.find(b => b.id === key);
-        if (benefit && idx < benefit.cashflowByYear.length) {
-          // Apply percentage adjustment to this benefit's contribution
-          adjustedBenefits += benefit.cashflowByYear[idx] * factor;
-        }
-      }
+    const benefitIndex = modifiedInvestment.benefits.findIndex((b: any) => b.id === key);
+    if (benefitIndex >= 0) {
+      const benefit = modifiedInvestment.benefits[benefitIndex];
+      // Apply percentage adjustment to each year's cashflow
+      benefit.cashflowByYear = benefit.cashflowByYear.map((amount: number) =>
+        amount * (1 + factor)
+      );
+    }
+  }
 
-      // Apply adoption delay effect (reduce early years' benefits)
-      if (adoptionDelay > 0 && idx < adoptionDelay / 12) {
-        const delayFactor = Math.max(0, 1 - (adoptionDelay / 12 - idx));
-        adjustedBenefits *= delayFactor;
-      }
+  // Apply adoption delay by modifying the adoption start month
+  if (adoptionDelay > 0) {
+    for (const benefit of modifiedInvestment.benefits) {
+      benefit.adoption.fullAdoptionMonth += adoptionDelay;
+    }
+  }
 
-      return adjustedCosts + adjustedBenefits;
-    });
+  // Generate cashflows with modified investment
+  const modifiedCashflows = generateCashflows(modifiedInvestment, discountRate, horizon);
+  const modifiedCashflowValues = modifiedCashflows.map(cf => cf.netCashflow);
 
-  return computeKPIsFromCashflows(modifiedCashflows, discountRate, horizon);
+  return computeKPIsFromCashflows(modifiedCashflowValues, discountRate, horizon);
 }
 
 /**
