@@ -13,10 +13,10 @@ export class PostgreSQLDatabase implements IDatabase {
   private pool: Pool;
 
   constructor() {
-    const dbUrl = process.env.DATABASE_URLROI;
+    const dbUrl = process.env.DATABASE_URL;
     if (!dbUrl) {
       throw new Error(
-        'DATABASE_URLROI environment variable not set. See docs/POSTGRESQL_SETUP.md'
+        'DATABASE_URL environment variable not set. See docs/POSTGRESQL_SETUP.md'
       );
     }
 
@@ -253,7 +253,8 @@ export class PostgreSQLDatabase implements IDatabase {
     try {
       const result = await client.query(
         `DELETE FROM projects
-         WHERE last_accessed < NOW() - INTERVAL '${days} days'`
+         WHERE last_accessed < NOW() - INTERVAL '1 day' * $1`,
+        [days]
       );
       return result.rowCount || 0;
     } catch (error) {

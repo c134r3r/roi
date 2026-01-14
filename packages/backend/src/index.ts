@@ -12,7 +12,7 @@ import { IDatabase } from './database/index.js';
 let db: IDatabase;
 
 // Use PostgreSQL only if explicitly configured
-const usePostgres = process.env.DATABASE_URLROI ? true : false;
+const usePostgres = process.env.DATABASE_URL ? true : false;
 
 if (usePostgres) {
   console.log('🗄️ Using PostgreSQL database (NEON)...');

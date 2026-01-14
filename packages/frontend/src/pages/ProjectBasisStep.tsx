@@ -101,30 +101,23 @@ export default function ProjectBasisStep({ onNext, onBack }: ProjectBasisStepPro
         ],
         settings: {
           currency: formData.currency as any,
-          horizon: parseInt(formData.horizon),
+          horizon: formData.horizon,
           discountRate: formData.discountRate / 100,
           baseCurrency: formData.currency,
         },
       };
-
-      console.log('Created local project:', newProject.title);
 
       // Speichere in Zustand
       setCurrentProject(newProject);
 
       // Speichere das Projekt in der Datenbank
       try {
-        console.log('[ProjectBasisStep] Saving project to database...');
         const savedProject = await saveProjectToDatabase(newProject);
-        console.log('[ProjectBasisStep] Project saved to database with code:', savedProject.code);
         setCurrentProject(savedProject);
         setIsLoading(false);
         onNext();
       } catch (dbError) {
-        console.error('[ProjectBasisStep] Database save failed:', dbError);
-
         // Fallback: Arbeite lokal weiter
-        console.log('[ProjectBasisStep] Falling back to local project...');
         newProject.code = 'LOCAL-' + uuidv4().slice(0, 8).toUpperCase();
         setCurrentProject(newProject);
         setIsLoading(false);
