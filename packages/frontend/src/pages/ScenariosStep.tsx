@@ -6,6 +6,14 @@ interface ScenariosStepProps {
   onBack: () => void;
 }
 
+function formatMonths(value: number): string {
+  const years = Math.floor(value);
+  const months = Math.round((value - years) * 12);
+  if (years === 0) return `${months}M`;
+  if (months === 0) return `${years}Y`;
+  return `${years}Y ${months}M`;
+}
+
 export default function ScenariosStep({ onNext, onBack }: ScenariosStepProps) {
   const currentProject = useAppStore((s) => s.currentProject);
 
@@ -26,7 +34,7 @@ export default function ScenariosStep({ onNext, onBack }: ScenariosStepProps) {
     { key: 'roi', label: 'ROI', unit: '%', format: (v: number) => v.toFixed(1) },
     { key: 'npv', label: 'NPV', unit: '€', format: (v: number) => Math.round(v).toLocaleString('de-DE') },
     { key: 'irr', label: 'IRR', unit: '%', format: (v: number) => v.toFixed(1) },
-    { key: 'paybackPeriod', label: 'Amortisation', unit: 'Jahre', format: (v: number) => v.toFixed(1) },
+    { key: 'paybackPeriod', label: 'Amortisation', unit: 'Jahre', format: (v: number) => formatMonths(v) },
   ];
 
   const SCENARIO_COLORS: Record<string, { bg: string; border: string; text: string; accent: string }> = {

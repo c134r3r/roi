@@ -220,42 +220,63 @@ function SensitivityAnalysis({ investment }: { investment: Investment }) {
   );
 }
 
-function CalculationExplanation({ currency }: { currency: string }) {
+function CalculationExplanation({
+  investment,
+  currency
+}: {
+  investment: Investment;
+  currency: string;
+}) {
+  const kpis = investment.computedKPIs;
+  const totalBenefits = investment.cashflows.reduce((sum, cf) => sum + cf.benefits, 0);
+  const totalCosts = investment.cashflows.reduce((sum, cf) => sum + Math.abs(cf.costs), 0);
+
   return (
     <div className="card p-6 bg-blue-50 border-l-4 border-blue-500">
       <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-blue-900">
         <TrendingUp className="w-5 h-5" />
         Herleitung der Kennzahlen
       </h3>
-      <div className="space-y-3 text-sm text-blue-900">
-        <div>
-          <p className="font-medium">ROI (Return on Investment):</p>
-          <p className="text-xs opacity-75">
-            Prozentuale Rendite basierend auf dem investierten Kapital über den Analysehorizont
+      <div className="space-y-4 text-sm text-blue-900">
+        <div className="bg-white rounded p-3">
+          <p className="font-medium">ROI (Return on Investment): {formatPercentage(kpis.roi)}</p>
+          <p className="text-xs opacity-75 mt-1">
+            Die Gesamtrendite Ihrer Investition von {formatCurrency(totalCosts, currency)} über {investment.cashflows.length} Jahre.
+            Mit einem Gesamtnutzen von {formatCurrency(totalBenefits, currency)} erzielen Sie einen Gewinn von {formatCurrency(kpis.roiAbsolute, currency)}.
           </p>
         </div>
-        <div>
-          <p className="font-medium">NPV (Netto-Gegenwartswert):</p>
-          <p className="text-xs opacity-75">
-            Summe aller diskontierten Cashflows abzüglich der Anfangsinvestition
+        <div className="bg-white rounded p-3">
+          <p className="font-medium">NPV (Netto-Gegenwartswert): {formatCurrency(kpis.npv, currency)}</p>
+          <p className="text-xs opacity-75 mt-1">
+            Der heutige Wert aller zukünftigen Cashflows abzüglich der Anfangsinvestition.
+            Ein positiver NPV von {formatCurrency(kpis.npv, currency)} bedeutet, dass die Investition rentabel ist.
           </p>
         </div>
-        <div>
-          <p className="font-medium">IRR (Interner Zinssatz):</p>
-          <p className="text-xs opacity-75">
-            Zinssatz, bei dem der NPV gleich Null ist
+        <div className="bg-white rounded p-3">
+          <p className="font-medium">IRR (Interner Zinssatz): {formatPercentage(kpis.irr)}</p>
+          <p className="text-xs opacity-75 mt-1">
+            Der Zinssatz, bei dem der NPV Null ist. Eine IRR von {formatPercentage(kpis.irr)} bedeutet,
+            dass sich Ihre Investition mit dieser Rate verzinst.
           </p>
         </div>
-        <div>
-          <p className="font-medium">Payback Period:</p>
-          <p className="text-xs opacity-75">
-            Zeitraum, bis sich die Investition amortisiert hat
+        <div className="bg-white rounded p-3">
+          <p className="font-medium">Amortisationszeit: {formatMonths(kpis.paybackPeriod)}</p>
+          <p className="text-xs opacity-75 mt-1">
+            Zeitraum bis zur Amortisation: Nach {formatMonths(kpis.paybackPeriod)} haben sich die Kosten von
+            {formatCurrency(totalCosts, currency)} durch den Nutzen von {formatCurrency(totalBenefits, currency)} ausgeglichen.
           </p>
         </div>
-        <div>
-          <p className="font-medium">Profitability Index:</p>
-          <p className="text-xs opacity-75">
-            NPV / Anfangsinvestition
+        <div className="bg-white rounded p-3">
+          <p className="font-medium">Diskontierte Amortisationszeit: {formatMonths(kpis.discountedPayback)}</p>
+          <p className="text-xs opacity-75 mt-1">
+            Wie Amortisationszeit, aber unter Berücksichtigung des Zeitwerts des Geldes mit dem Diskontierungszins.
+          </p>
+        </div>
+        <div className="bg-white rounded p-3">
+          <p className="font-medium">Profitability Index: {kpis.profitabilityIndex.toFixed(2)}</p>
+          <p className="text-xs opacity-75 mt-1">
+            NPV dividiert durch die Anfangsinvestition. Ein Wert von {kpis.profitabilityIndex.toFixed(2)} bedeutet,
+            dass Sie für jeden investierten Euro einen zusätzlichen Gewinn von {formatCurrency((kpis.profitabilityIndex - 1), currency)} erhalten.
           </p>
         </div>
       </div>
@@ -419,7 +440,7 @@ export default function ResultsStep({ onBack, onNewProject }: ResultsStepProps) 
       )}
 
       <div className="mb-8">
-        <CalculationExplanation currency={currency} />
+        <CalculationExplanation investment={investment} currency={currency} />
       </div>
 
       <div className="card p-6 mb-8">
