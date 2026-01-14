@@ -108,17 +108,21 @@ export class InMemoryDatabase implements IDatabase {
    */
   async cleanupExpiredProjects(days: number = 60): Promise<number> {
     const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-    let count = 0;
 
-    for (const [id] of this.projects.entries()) {
-      const record = this.projects.get(id);
-      if (record && record.lastAccessed < cutoff) {
-        await this.deleteProject(id);
-        count++;
+    // Collect IDs first to avoid modifying collection during iteration
+    const idsToDelete: string[] = [];
+    for (const [id, record] of this.projects.entries()) {
+      if (record.lastAccessed < cutoff) {
+        idsToDelete.push(id);
       }
     }
 
-    return count;
+    // Delete collected IDs
+    for (const id of idsToDelete) {
+      await this.deleteProject(id);
+    }
+
+    return idsToDelete.length;
   }
 
   /**

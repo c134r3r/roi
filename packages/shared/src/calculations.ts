@@ -273,39 +273,17 @@ export function generateCashflows(
  * Berechnet alle KPIs für ein Investment
  */
 export function computeInvestment(investment: Investment, discountRate: number, horizon: number): void {
-  console.log('[Calculation] Starting computeInvestment:', {
-    costsCount: investment.costs.length,
-    benefitsCount: investment.benefits.length,
-    horizon,
-    discountRate,
-  });
-
   const cashflows = generateCashflows(investment, discountRate, horizon);
   const cashflowValues = cashflows.map(cf => cf.netCashflow);
 
-  console.log('[Calculation] Generated cashflows:', cashflowValues);
-  console.log('[Calculation] Benefits in investment:', investment.benefits.map(b => ({
-    id: b.id,
-    name: b.name,
-    type: b.type,
-    annualValue: b.cashflowByYear[0],
-  })));
-
   investment.cashflows = cashflows;
   investment.computedKPIs = computeKPIsFromCashflows(cashflowValues, discountRate, horizon);
-
-  console.log('[Calculation] Computed KPIs:', investment.computedKPIs);
 
   // Generiere Standard-Szenarien
   investment.scenarios = generateScenarios(investment, discountRate, horizon);
 
   // Berechne Sensitivität
   investment.sensitivity = computeSensitivity(investment, discountRate, horizon);
-
-  console.log('[Calculation] Scenarios:', investment.scenarios.map(s => ({
-    name: s.name,
-    kpis: s.computedKPIs,
-  })));
 }
 
 /**
@@ -367,19 +345,37 @@ function applyScenarioAndCompute(
   discountRate: number,
   horizon: number
 ): KPIs {
+  // Get special overrides
+  const costInflation = overrides['costInflation'] || 0;
+  const adoptionDelay = overrides['adoptionDelay'] || 0;
+
   const modifiedCashflows = generateCashflows(investment, discountRate, horizon)
     .map((cf, idx) => {
-      let adjusted = cf.netCashflow;
+      // Start with costs adjusted by inflation
+      let adjustedCosts = cf.costs * (1 + costInflation);
 
-      // Wende Szenario-Overrides an
-      for (const [benefitId, factor] of Object.entries(overrides)) {
-        const benefit = investment.benefits.find(b => b.id === benefitId);
+      // Start with baseline benefits
+      let adjustedBenefits = cf.benefits;
+
+      // Apply benefit-specific overrides
+      for (const [key, factor] of Object.entries(overrides)) {
+        // Skip special overrides
+        if (key === 'costInflation' || key === 'adoptionDelay') continue;
+
+        const benefit = investment.benefits.find(b => b.id === key);
         if (benefit && idx < benefit.cashflowByYear.length) {
-          adjusted += benefit.cashflowByYear[idx] * factor;
+          // Apply percentage adjustment to this benefit's contribution
+          adjustedBenefits += benefit.cashflowByYear[idx] * factor;
         }
       }
 
-      return adjusted;
+      // Apply adoption delay effect (reduce early years' benefits)
+      if (adoptionDelay > 0 && idx < adoptionDelay / 12) {
+        const delayFactor = Math.max(0, 1 - (adoptionDelay / 12 - idx));
+        adjustedBenefits *= delayFactor;
+      }
+
+      return adjustedCosts + adjustedBenefits;
     });
 
   return computeKPIsFromCashflows(modifiedCashflows, discountRate, horizon);

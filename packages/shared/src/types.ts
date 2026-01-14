@@ -3,7 +3,7 @@
  */
 
 export type Currency = 'EUR' | 'USD' | 'GBP' | 'CHF' | 'JPY';
-export type Horizon = 3 | 5 | 7;
+export type Horizon = number; // Years (3-10 typical range)
 export type CostCategory = 'LICENSES' | 'IMPLEMENTATION' | 'MIGRATION' | 'INFRASTRUCTURE' | 'TRAINING' | 'SUPPORT' | 'OTHER';
 export type BenefitType = 'TIME_SAVINGS' | 'ERROR_REDUCTION' | 'REVENUE' | 'COST_REDUCTION' | 'OTHER';
 export type ConfidenceLevel = 'LOW' | 'MEDIUM' | 'HIGH';

@@ -17,7 +17,7 @@ const router = Router() as any;
 // Validation Schemas
 const ProjectSettingsSchema = z.object({
   currency: z.enum(['EUR', 'USD', 'GBP', 'CHF', 'JPY']),
-  horizon: z.enum(['3', '5', '7']).transform(Number),
+  horizon: z.number().int().min(3).max(10),
   discountRate: z.number().min(0).max(1),
   baseCurrency: z.string(),
 });
@@ -50,7 +50,7 @@ router.post('/projects', async (req: any, res: Response) => {
       investments: [],
       settings: {
         currency: validated.settings.currency,
-        horizon: validated.settings.horizon as 3 | 5 | 7,
+        horizon: validated.settings.horizon,
         discountRate: validated.settings.discountRate,
         baseCurrency: validated.settings.baseCurrency,
       },
